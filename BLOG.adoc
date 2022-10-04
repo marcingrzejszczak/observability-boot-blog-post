@@ -1,0 +1,11 @@
+The Spring Observability Team has been working on adding Observability support for Spring Applications for quite some time and we're pleased to inform that this feature will be generally availabile with Spring Framework 6 and Spring Boot 3!
+
+What is Observability? In our understanding that's "how well you can understand the internals of your system by examining its outputs". We believe that the interconnection between metrics, logging and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think that Observability is by watching https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
+
+The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics via https://micrometer.io/docs[Micrometer] and new distributed tracing support via https://micrometer.io/docs/tracing[Micrometer Tracing]. The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type and we're adding remote baggage support.
+
+We've been chaning the API a lot over the course of this year. The most important change is that we've introduced a new API in Micrometer - the Observation API. The idea of its founding was that we want the users to instrument their code once using a single API and have multiple benefits out of it (e.g. metrics, tracing, logging). This blog post details what you need to know to about that API and how you can use it to provide more insights into your application.
+
+# Building Your First Observed Application
+
+The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-SNAPSHOTS (or RC1 once it's out) and your favorite build tool.
