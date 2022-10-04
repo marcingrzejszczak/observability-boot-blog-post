@@ -1,7 +1,11 @@
 package com.example.client;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.tracing.Tracer;
+import io.micrometer.tracing.handler.TracingAwareMeterObservationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +16,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
+@Import(ExemplarsConfiguration.class)
 public class ClientApplication {
 
 	private static final Logger log = LoggerFactory.getLogger(ClientApplication.class);
@@ -23,6 +29,7 @@ public class ClientApplication {
 		SpringApplication.run(ClientApplication.class, args);
 	}
 
+	// IMPORTANT! To instrument RestTemplate you must inject the RestTemplateBuilder
 	@Bean
 	RestTemplate restTemplate(RestTemplateBuilder builder) {
 		return builder.build();
@@ -43,7 +50,7 @@ public class ClientApplication {
 					 // The following lambda will be executed with an observation scope (e.g. all the MDC entries will be populated with tracing information). Also the observation will be started, stopped and if an error occurred it will be recorded on the observation
 					.observe(() -> {
 						log.info("Will send a request to the server"); // Since we're in an observation scope - this log line will contain tracing MDC entries ...
-						String response = restTemplate.getForObject("http://localhost:7654/foo", String.class);
+						String response = restTemplate.getForObject("http://localhost:7654/foo", String.class); // Boot's RestTemplate instrumentation creates a child span here
 						log.info("Got response [{}]", response); // ... so will this line
 					});
 

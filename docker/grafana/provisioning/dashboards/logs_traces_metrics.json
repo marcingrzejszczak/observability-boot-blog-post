@@ -176,7 +176,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "http_server_requests_seconds_max{uri=\"/foo\"}",
+                    "expr": "histogram_quantile(.9, sum(rate(http_server_requests_seconds_bucket[1m])) by (le))",
                     "legendFormat": "max",
                     "range": true,
                     "refId": "A"
