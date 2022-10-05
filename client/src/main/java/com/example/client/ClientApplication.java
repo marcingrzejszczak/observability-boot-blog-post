@@ -29,12 +29,15 @@ public class ClientApplication {
 		SpringApplication.run(ClientApplication.class, args);
 	}
 
+	// tag::rest-template[]
 	// IMPORTANT! To instrument RestTemplate you must inject the RestTemplateBuilder
 	@Bean
 	RestTemplate restTemplate(RestTemplateBuilder builder) {
 		return builder.build();
 	}
+	// end::rest-template[]
 
+	// tag::runner[]
 	@Bean
 	CommandLineRunner myCommandLineRunner(ObservationRegistry registry, RestTemplate restTemplate) {
 		return args -> {
@@ -56,4 +59,5 @@ public class ClientApplication {
 
 		};
 	}
+	// end::runner[]
 }

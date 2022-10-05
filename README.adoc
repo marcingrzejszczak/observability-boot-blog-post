@@ -2,42 +2,20 @@
 
 Code supporting the blog post related to Spring Observability support in Spring Boot 3.0.0-RC1
 
+== Building the docs
+
+[source,bash]
+----
+$ ./mvnw clean install -Pdocs -pl docs
+----
+
 == Building the samples
 
 Just run the Maven command to build the samples
 
-```bash
+[source,bash]
+----
 $ ./mvnw clean install
-```
+----
 
-== Running the samples
-
-First start up the observability stack (for demo purposes you can use the provided Grafana, Tempo & Loki stack) and wait for it to start.
-
-```bash
-$ docker-compose up
-```
-
-* To access Prometheus go to http://localhost:9090/
-* To access Grafana go to http://localhost:3000/ (Grafana credentials: admin:admin)
-
-Next, run the server side application (this will block your current terminal window)
-
-```bash
-$ ./mvnw spring-boot:run -pl :server
-```
-
-Next, run the client side application (this will block your current terminal window)
-
-```bash
-$ ./mvnw spring-boot:run -pl :client
-```
-
-You should see log statements similar to these:
-
-```
-2022-10-04T15:04:55.345+02:00  INFO [client,93b7a150b7e293ef,93b7a150b7e293ef] 92556 --- [           main] com.example.client.ClientApplication     : Will send a request to the server
-2022-10-04T15:04:55.385+02:00  INFO [client,93b7a150b7e293ef,93b7a150b7e293ef] 92556 --- [           main] com.example.client.ClientApplication     : Got response [foo]
-```
-
-Now, you can go to http://localhost:3000/[Grafana], go to dashboards, and you can click on the provided `Logs, Traces, Metrics` dashboard. There you can pick the trace id with value `93b7a150b7e293ef` to find all logs and traces from both applications that correspond to that trace id.
+include::RUNNING.adoc[]

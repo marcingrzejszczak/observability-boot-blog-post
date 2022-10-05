@@ -4,16 +4,17 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.example</groupId>
-	<artifactId>observability</artifactId>
+	<artifactId>observability-blog-post-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>observability-parent</name>
-	<description>observability-parent</description>
+	<name>observability-blog-post-parent</name>
+	<description>observability-blog-post-parent</description>
 
 	<modules>
 		<module>client</module>
 		<module>server</module>
+		<module>docs</module>
 	</modules>
 
 </project>

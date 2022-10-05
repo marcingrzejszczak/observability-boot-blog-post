@@ -36,9 +36,10 @@ public class ServerApplication {
 		SpringApplication.run(ServerApplication.class, args);
 	}
 
+	// tag::filter[]
 	// You must set this manually until this is registered in Boot
 	@Bean
-	FilterRegistrationBean traceWebFilter(ObservationRegistry observationRegistry) {
+	FilterRegistrationBean observationWebFilter(ObservationRegistry observationRegistry) {
 		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new HttpRequestsObservationFilter(observationRegistry));
 		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD,
 				DispatcherType.INCLUDE, DispatcherType.REQUEST);
@@ -47,15 +48,19 @@ public class ServerApplication {
 		filterRegistrationBean.setUrlPatterns(Collections.singletonList("/foo"));
 		return filterRegistrationBean;
 	}
+	// end::filter[]
 
+	// tag::aspect[]
 	// To have the @Observed support we need to register this aspect
 	@Bean
 	ObservedAspect observedAspect(ObservationRegistry observationRegistry) {
 		return new ObservedAspect(observationRegistry);
 	}
+	// end::aspect[]
 
 }
 
+// tag::controller[]
 @RestController
 class MyController {
 
@@ -72,14 +77,17 @@ class MyController {
 		return myService.foo();
 	}
 }
+// end::controller[]
 
+// tag::service[]
 @Service
 class MyService {
 
 	private final Random random = new Random();
 
 	// Example of using an annotation to observe methods
-	@Observed(contextualName = "my-contextual-name",
+	@Observed(name = "foo.metric",
+			contextualName = "my-contextual-name",
 			lowCardinalityKeyValues = {"low.cardinality.key", "low cardinality value"})
 	String foo() {
 		try {
@@ -91,7 +99,9 @@ class MyService {
 		return "foo";
 	}
 }
+// end::service[]
 
+// tag::handler[]
 // Example of plugging in a custom handler that in this case will print a statement before and after all observations take place
 @Component
 class MyHandler implements ObservationHandler<Observation.Context> {
@@ -113,3 +123,4 @@ class MyHandler implements ObservationHandler<Observation.Context> {
 		return true;
 	}
 }
+// end::handler[]

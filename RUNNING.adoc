@@ -1,0 +1,35 @@
+=== Running the samples
+
+First start up the observability stack (for demo purposes you can use the provided Grafana, Tempo & Loki stack) and wait for it to start.
+
+[source,bash]
+----
+$ docker-compose up
+----
+
+* To access Prometheus go to http://localhost:9090/
+* To access Grafana go to http://localhost:3000/ (Grafana credentials: admin:admin)
+
+Next, run the server side application (this will block your current terminal window)
+
+[source,bash]
+----
+$ ./mvnw spring-boot:run -pl :server
+----
+
+Next, run the client side application (this will block your current terminal window)
+
+[source,bash]
+----
+$ ./mvnw spring-boot:run -pl :client
+----
+
+You should see log statements similar to these:
+
+[source]
+----
+2022-10-04T15:04:55.345+02:00  INFO [client,93b7a150b7e293ef,93b7a150b7e293ef] 92556 --- [           main] com.example.client.ClientApplication     : Will send a request to the server
+2022-10-04T15:04:55.385+02:00  INFO [client,93b7a150b7e293ef,93b7a150b7e293ef] 92556 --- [           main] com.example.client.ClientApplication     : Got response [foo]
+----
+
+Now, you can go to http://localhost:3000/[Grafana], go to dashboards, and you can click on the provided `Logs, Traces, Metrics` dashboard. There you can pick the trace id with value `93b7a150b7e293ef` to find all logs and traces from both applications that correspond to that trace id.
