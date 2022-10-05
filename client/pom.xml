@@ -30,17 +30,24 @@
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
+
+		<!-- OpenTelemetry version -->
 		<!-- For Tracing -->
 		<dependency>
 			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-brave</artifactId>
+			<artifactId>micrometer-tracing-bridge-otel</artifactId>
 		</dependency>
 		<!-- For Latency Visualization -->
 		<dependency>
 			<groupId>io.zipkin.reporter2</groupId>
-			<artifactId>zipkin-reporter-brave</artifactId>
+			<artifactId>zipkin-reporter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.zipkin.reporter2</groupId>
+			<artifactId>zipkin-sender-urlconnection</artifactId>
 		</dependency>
 
+		<!-- For pushing logs out -->
 		<dependency>
 			<groupId>com.github.loki4j</groupId>
 			<artifactId>loki-logback-appender</artifactId>

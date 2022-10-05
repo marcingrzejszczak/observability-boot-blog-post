@@ -9,3 +9,16 @@ We've been chaning the API a lot over the course of this year. The most importan
 # Building Your First Observed Application
 
 The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-SNAPSHOTS (or RC1 once it's out) and your favorite build tool.
+
+We will be building a Spring WebMvc server application and a client that will call the server using RestTemplate. Let's start with the server side first.
+
+## WebMvc Server
+
+You need to chose `spring-boot-starter-actuator` to add observation features to your application (that adds https://micrometer.io[Micrometer] to the classpath). Since we want to start an HTTP server you have to pick `spring-boot-starter-web`.
+
+To add aspect support we need to add the `org.springframework.boot:spring-boot-starter-aop` dependency.
+
+Time to add observability related features!
+
+* **Metrics**: Since we want Micrometer metrics emission to be setup with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus`.
+* **Tracing**: Since we want to add Micrometer Tracing support, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle a lifecycle of a span). We will pick https://zipkin.io[OpenZipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`. For

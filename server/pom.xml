@@ -35,6 +35,7 @@
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
 		</dependency>
+		<!-- Brave version -->
 		<!-- For Tracing -->
 		<dependency>
 			<groupId>io.micrometer</groupId>
@@ -46,6 +47,7 @@
 			<artifactId>zipkin-reporter-brave</artifactId>
 		</dependency>
 
+		<!-- For pushing logs out -->
 		<dependency>
 			<groupId>com.github.loki4j</groupId>
 			<artifactId>loki-logback-appender</artifactId>
