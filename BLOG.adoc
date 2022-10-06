@@ -398,31 +398,31 @@ You should see log statements similar to these:
 
 Now, you can go to http://localhost:3000/[Grafana], go to dashboards, and you can click on the provided `Logs, Traces, Metrics` dashboard. There you can pick the trace id with value (e.g. `bbe3aea006077640b66d40f3e62f04b9`) to find all logs and traces from both applications that correspond to that trace id. You should see a following correlated view of logs and traces related to the same trace identifier, and you will see metrics taking place at the same time range. The metrics are related to HTTP request processing latency. These come from the automated Spring Boot WebMvc instrumentation using Micrometer API.
 
-image::./img/logs_metrics_traces.jpeg[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/logs_metrics_traces.jpeg[]
 
 Notice a diamond shape in the metrics - these are https://grafana.com/docs/grafana/latest/basics/exemplars/[`Exemplars`]. Those are "specific trace representative of measurement taken in a given time interval". If you click on the shape you can jump to the trace id view to see the corresponding trace.
 
-image::./img/exemplar.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/exemplar.png[]
 
 Either click on the trace id to `Query it with Tempo` or go to Tempo and pick the trace identifier yourself. You will see the following screen.
 
-image::./img/trace-view.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/trace-view.png[]
 
 Each bar represents a `span`. You can see how much time it took for operation to complete. If you click on a given span you can see tags (key-value metadata) and timing information related to that particular operation.
 
-image::./img/span-tags.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/span-tags.png[]
 
 This is how the correlated logs view would look like in Loki.
 
-image::./img/correlated-logs.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/correlated-logs.png[]
 
 If you want to see the `@Observed` annotated method metrics, you can go to the `Prometheus` view and find the `foo_metric` Timer.
 
-image::./img/foo-metric.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/foo-metric.png[]
 
 If you want to see the metrics from your Observation that you have manually created, you can go to the `Prometheus` view and find the `my_observation` Timer.
 
-image::./img/my-observation.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/my-observation.png[]
 
 
 
