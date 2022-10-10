@@ -42,8 +42,6 @@ To separate Observation lifecycle operations from an Observation configuration (
 IMPORTANT:  *High cardinality* means that a key value will have an unbounded number of possible values. An HTTP URL is a good
 example of such a key value (e.g. `/foo/bar`, `/foo/baz` etc.). *Low cardinality* means that a key value will  have a bounded number of possible values. A templated HTTP URL is a good example of such a key value (e.g. `/foo/{userId}`).
 
-The main idea behind the `Observations` and the `ObservationHandlers` is that -- something is missing here.
-
 = Building Your First Observed Application
 
 The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-RC1 and your favorite build tool.
