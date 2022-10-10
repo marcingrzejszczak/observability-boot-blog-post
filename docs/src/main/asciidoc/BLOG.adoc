@@ -2,7 +2,7 @@ The Spring Observability Team has been working on adding Observability support f
 
 What is Observability? In our understanding that's _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think that Observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
 
-The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing]. The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we are adding remote baggage support.
+The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing]. The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we are adding remote baggage (key-values that would be automatically sent over the wire) support.
 
 We have been changing the API a lot over the course of this year. The most important change is that we have introduced a new API in Micrometer: the Observation API.
 
@@ -39,7 +39,8 @@ Whenever a state transition happens, an `ObservationHandler` method (such as `on
 
 To separate Observation lifecycle operations from an Observation configuration (such as names and low and high cardinality tags), you can use the `ObservationConvention` that provides an easy way of overriding the default naming conventions.
 
-The main idea behind the `Observations` and the `ObservationHandlers` is that -- something is missing here.
+IMPORTANT:  *High cardinality* means that a key value will have an unbounded number of possible values. An HTTP URL is a good
+example of such a key value (e.g. `/foo/bar`, `/foo/baz` etc.). *Low cardinality* means that a key value will  have a bounded number of possible values. A templated HTTP URL is a good example of such a key value (e.g. `/foo/{userId}`).
 
 = Building Your First Observed Application
 
