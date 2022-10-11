@@ -125,6 +125,8 @@ include::../../../../server/src/main/java/com/example/server/ServerApplication.j
 
 You might wonder what you should do to have the observability turned on for the controllers? You can register one bean and be ready to go. In the future we, will provide a more automated solution.
 
+// TODO: Remove this section once https://github.com/spring-projects/spring-boot/issues/32538 is merged
+
 .MyConfiguration.java
 [source,java]
 ----
@@ -192,6 +194,12 @@ include::../../../../client/src/main/java/com/example/client/ClientApplication.j
 }
 ----
 
+=== Limitations
+
+The Spring Boot AutoConfiguration for WebMvc Observability is not yet ready. As a result, we need to set things up manually. For more information, see this https://github.com/spring-projects/spring-boot/issues/32538[issue].
+
+For the Spring Boot Exemplars AutoConfiguration to work properly, we need to wait for https://github.com/spring-projects/spring-boot/pull/32399[this PR] and https://github.com/spring-projects/spring-boot/pull/32415[this PR] to be merged. Until then, we need to create https://github.com/marcingrzejszczak/observability-boot-blog-post/blob/main/server/src/main/java/com/example/server/ExemplarsConfiguration.java[such configuration] manually.
+
 == Running It All Together
 
 We have prepared a Docker setup of the whole Observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications:
@@ -202,8 +210,10 @@ include::../../../../RUNNING.adoc[]
 
 In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You were also able to visualize the latency, see the correlated logs, and check the metrics that come from you Spring Boot applications.
 
+You could also able observe your applications by using native images with Spring Native.
+
 = Next Steps
 
 Based on community feedback, we will continue to improve our Observability story. We intend to go GA in November this year.
 
-This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback!
+This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots!

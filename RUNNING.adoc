@@ -61,3 +61,95 @@ image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-bl
 If you want to see the metrics from your Observation that you have manually created, go to the `Prometheus` view and find the `my_observation` Timer.
 
 image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/my-observation.png[]
+
+== Running It All Together using Spring Native
+
+To better understand how Spring Boot supports Native, please read https://spring.io/blog/2022/09/26/native-support-in-spring-boot-3-0-0-m5[this excellent blog post]. We reuse that knowledge to run the previously created applications using Spring Native.
+
+=== Building
+
+To build the applications, you need GraalVM on your path. If you use `SDKMan`, invoke the following:
+
+[indent=0]
+----
+sdk install java 22.2.r17-nik
+----
+
+See also https://www.graalvm.org/java/quickstart/[GraalVM Quickstart].
+
+To build the application with Maven, you need to enable the `native` profile:
+
+[indent=0]
+----
+$ ./mvnw -Pnative clean package
+----
+
+=== Running
+
+Run the server side application first
+
+[indent=0]
+----
+$ ./server/target/server
+----
+
+Next, run the client side application.
+
+[indent=0]
+----
+$ ./client/target/client
+----
+
+You should get output similar to this:
+
+.Client side logs
+[indent=0]
+----
+2022-10-10T12:57:17.712+02:00  INFO [client,,] 82009 --- [           main] com.example.client.ClientApplication     : Starting ClientApplication using Java 17.0.4 on marcin-precision5560 with PID 82009 (/home/marcin/repo/observability/blogs/bootRc1/client/target/client started by marcin in /home/marcin/repo/observability/blogs/bootRc1)
+2022-10-10T12:57:17.712+02:00  INFO [client,,] 82009 --- [           main] com.example.client.ClientApplication     : No active profile set, falling back to 1 default profile: "default"
+2022-10-10T12:57:17.723+02:00  INFO [client,,] 82009 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 6543 (http)
+2022-10-10T12:57:17.723+02:00  INFO [client,,] 82009 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2022-10-10T12:57:17.723+02:00  INFO [client,,] 82009 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.0.23]
+2022-10-10T12:57:17.727+02:00  INFO [client,,] 82009 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2022-10-10T12:57:17.727+02:00  INFO [client,,] 82009 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 15 ms
+2022-10-10T12:57:17.731+02:00  WARN [client,,] 82009 --- [           main] i.m.c.i.binder.jvm.JvmGcMetrics          : GC notifications will not be available because MemoryPoolMXBeans are not provided by the JVM
+2022-10-10T12:57:17.781+02:00  INFO [client,,] 82009 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 15 endpoint(s) beneath base path '/actuator'
+2022-10-10T12:57:17.783+02:00  INFO [client,,] 82009 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 6543 (http) with context path ''
+2022-10-10T12:57:17.783+02:00  INFO [client,,] 82009 --- [           main] com.example.client.ClientApplication     : Started ClientApplication in 0.077 seconds (process running for 0.079)
+2022-10-10T12:57:17.784+02:00  INFO [client,27c1113e4276c4173daec3675f536bf4,e0f2db8b983607d8] 82009 --- [           main] com.example.client.ClientApplication     : Will send a request to the server
+2022-10-10T12:57:17.820+02:00  INFO [client,27c1113e4276c4173daec3675f536bf4,e0f2db8b983607d8] 82009 --- [           main] com.example.client.ClientApplication     : Got response [foo]
+2022-10-10T12:57:18.966+02:00  INFO [client,,] 82009 --- [nio-6543-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2022-10-10T12:57:18.966+02:00  INFO [client,,] 82009 --- [nio-6543-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2022-10-10T12:57:18.966+02:00  INFO [client,,] 82009 --- [nio-6543-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+----
+
+.Server side logs
+[indent=0]
+----
+2022-10-10T12:57:07.200+02:00  INFO [server,,] 81760 --- [           main] com.example.server.ServerApplication     : Starting ServerApplication using Java 17.0.4 on marcin-precision5560 with PID 81760 (/home/marcin/repo/observability/blogs/bootRc1/server/target/server started by marcin in /home/marcin/repo/observability/blogs/bootRc1)
+2022-10-10T12:57:07.201+02:00  INFO [server,,] 81760 --- [           main] com.example.server.ServerApplication     : No active profile set, falling back to 1 default profile: "default"
+2022-10-10T12:57:07.213+02:00  INFO [server,,] 81760 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 7654 (http)
+2022-10-10T12:57:07.213+02:00  INFO [server,,] 81760 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2022-10-10T12:57:07.213+02:00  INFO [server,,] 81760 --- [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.0.23]
+2022-10-10T12:57:07.217+02:00  INFO [server,,] 81760 --- [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2022-10-10T12:57:07.217+02:00  INFO [server,,] 81760 --- [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 16 ms
+2022-10-10T12:57:07.222+02:00  WARN [server,,] 81760 --- [           main] i.m.c.i.binder.jvm.JvmGcMetrics          : GC notifications will not be available because MemoryPoolMXBeans are not provided by the JVM
+2022-10-10T12:57:07.278+02:00  INFO [server,,] 81760 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 15 endpoint(s) beneath base path '/actuator'
+2022-10-10T12:57:07.280+02:00  INFO [server,,] 81760 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 7654 (http) with context path ''
+2022-10-10T12:57:07.281+02:00  INFO [server,,] 81760 --- [           main] com.example.server.ServerApplication     : Started ServerApplication in 0.086 seconds (process running for 0.088)
+2022-10-10T12:57:07.639+02:00  INFO [server,,] 81760 --- [nio-7654-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2022-10-10T12:57:07.639+02:00  INFO [server,,] 81760 --- [nio-7654-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2022-10-10T12:57:07.640+02:00  INFO [server,,] 81760 --- [nio-7654-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2022-10-10T12:57:17.785+02:00  INFO [server,,] 81760 --- [nio-7654-exec-8] com.example.server.MyHandler             : Before running the observation for context [http.server.requests]
+2022-10-10T12:57:17.785+02:00  INFO [server,27c1113e4276c4173daec3675f536bf4,9affba5698490e2d] 81760 --- [nio-7654-exec-8] com.example.server.MyController          : Got a request
+2022-10-10T12:57:17.820+02:00  INFO [server,,] 81760 --- [nio-7654-exec-8] com.example.server.MyHandler             : After running the observation for context [http.server.requests]
+----
+
+You can check Grafana for metrics and traces. Read the <<native-support-limitations>> section on why you won't find any pushed logs to Loki.
+
+[[native-support-limitations]]
+=== Native Support Limitations
+
+You will not see logs being pushed to Loki just yet. For more information, look into https://github.com/spring-projects/spring-boot/issues/25847[this issue].
+
+On the client side, we need to provide the `reflect-config.js` configuration manually. For more information, see https://github.com/open-telemetry/opentelemetry-java/pull/4832[this PR].
