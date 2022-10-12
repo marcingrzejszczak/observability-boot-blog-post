@@ -5,11 +5,11 @@ Edit the files in the src/main/asciidoc/ directory instead.
 ////
 
 
-The Spring Observability Team has been working on adding Observability support for Spring Applications for quite some time, and we are pleased to inform you that this feature will be generally available with Spring Framework 6 and Spring Boot 3!
+The Spring Observability Team has been working on adding observability support for Spring Applications for quite some time, and we are pleased to inform you that this feature will be generally available with Spring Framework 6 and Spring Boot 3!
 
-What is Observability? In our understanding that's _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think that Observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
+What is observability? In our understanding, it is _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
 
-The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing] (formerly https://github.com/spring-cloud/spring-cloud-sleuth/[Spring Cloud Sleuth]). The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata used by tracing infrastructure (it's called "remote baggage") that helps to label the observations.
+The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing] (formerly https://github.com/spring-cloud/spring-cloud-sleuth/[Spring Cloud Sleuth]). The most notable changes are that it will contain built-in support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata to be used by the tracing infrastructure (called "remote baggage") that helps to label the observations.
 
 We have been changing the Micrometer API a lot over the course of this year. The most important change is that we have introduced a new API: the Observation API.
 
@@ -19,18 +19,18 @@ This blog post details what you need to know to about that API and how you can u
 
 = How Does Micrometer Observation Work?
 
-For any Observation to happen, you need to register `ObservationHandler` objects through an `ObservationRegistry`. An `ObservationHandler` reacts only to supported implementations of an `Observation.Context` and can create timers, spans, and logs by reacting to the lifecycle events of an Observation such as
+For any observation to happen, you need to register `ObservationHandler` objects through an `ObservationRegistry`. An `ObservationHandler` reacts only to supported implementations of an `Observation.Context` and can create timers, spans, and logs by reacting to the lifecycle events of an observation, such as:
 
 * `start` - Observation has been started. Happens when the `Observation#start()` method gets called.
 * `stop` - Observation has been stopped. Happens when the `Observation#stop()` method gets called.
 * `error` - An error occurred while observing. Happens when the `Observation#error(exception)` method gets called.
 * `event` - An event happened when observing. Happens when the `Observation#event(event)` method gets called.
-* `scope started` - Observation opens a Scope. The Scope must be closed when no longer used. Handlers can create thread local variables on start that are cleared upon closing of the scope. Happens when the `Observation#openScope()` method gets called.
-* `scope stopped` - Observation stops a Scope. Happens when the `Observation.Scope#close()` method gets called.
+* `scope started` - Observation opens a scope. The scope must be closed when no longer used. Handlers can create thread local variables on start that are cleared upon closing of the scope. Happens when the `Observation#openScope()` method gets called.
+* `scope stopped` - Observation stops a scope. Happens when the `Observation.Scope#close()` method gets called.
 
 Whenever any of these methods is called, an `ObservationHandler` method (such as `onStart(T extends Observation.Context ctx)`, `onStop(T extends Observation.Context ctx)`, and so on) are called. To pass state between the handler methods, you can use the `Observation.Context`.
 
-This is how Observation state diagram looks like:
+The observation state diagram looks like this:
 
 [source]
 ----
@@ -39,7 +39,7 @@ This is how Observation state diagram looks like:
 Created ----------> Started ----------> Stopped
 ----
 
-This is how Observation Scope state diagram looks like:
+The observation Scope state diagram looks like this:
 
 [source]
 ----
@@ -48,40 +48,40 @@ This is how Observation Scope state diagram looks like:
 Scope Started ----------> Scope Finished
 ----
 
-To make it possible to debug production problems an Observation needs additional metadata such as key-value pairs (also known as tags). You can then query your metrics or distributed tracing backend by those tags to find the required data. Tags can be either of high or low cardinality.
+To make it possible to debug production problems, an observation needs additional metadata, such as key-value pairs (also known as tags). You can then query your metrics or distributed tracing backend by using those tags to find the required data. Tags can be of either high or low cardinality.
 
 IMPORTANT:  *High cardinality* means that a pair will have an unbounded number of possible values. An HTTP URL is a good
-example of such a key value (e.g. `/foo/user1234`, `/foo/user2345` etc.). *Low cardinality* means that a key value will  have a bounded number of possible values. A *templated* HTTP URL is a good example of such a key value (e.g. `/foo/{userId}`).
+example of such a key value (for example, `/foo/user1234`, `/foo/user2345`, and so on). *Low cardinality* means that a key value will  have a bounded number of possible values. A *templated* HTTP URL (such as `/foo/{userId}`) is a good example of such a key value.
 
-To separate Observation lifecycle operations from an Observation configuration (such as names and low and high cardinality tags), you can use the `ObservationConvention` that provides an easy way of overriding the default naming conventions.
+To separate observation lifecycle operations from an observation configuration (such as names and low and high cardinality tags), you can use the `ObservationConvention` that provides an easy way of overriding the default naming conventions.
 
 = Building Your First Observed Application
 
 The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-RC1 and your favorite build tool.
 
-We will build a Spring WebMvc server application and a client that will call the server using RestTemplate. We start with the server side.
+We will build a Spring WebMvc server application and a client to call the server using RestTemplate. We start with the server side.
 
 == WebMvc Server Setup
 
 Since we want to start an HTTP server, we have to pick the `org.springframework.boot:spring-boot-starter-web` dependency.
 
-To create Observations using `@Observed` aspect, we need to add the `org.springframework.boot:spring-boot-starter-aop` dependency.
+To create observations by using the `@Observed` aspect, we need to add the `org.springframework.boot:spring-boot-starter-aop` dependency.
 
-You need to chose `spring-boot-starter-actuator` to add observation features to your application (to add https://micrometer.io[Micrometer] to the classpath).
+To add observation features to your application, choose `spring-boot-starter-actuator` (to add https://micrometer.io[Micrometer] to the classpath).
 
-Now it's time to add observability related features!
+Now it is time to add observability related features!
 
 * *Metrics*
 ** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
 * *Tracing*
-** For *Tracing Context Propagation*, with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We will pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case we will produce an Zipkin-compliant span. To achieve that, we need to add a `io.zipkin.reporter2:zipkin-reporter-brave` dependency.
+** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an Zipkin-compliant span. To achieve that, we need to add the `io.zipkin.reporter2:zipkin-reporter-brave` dependency.
 * *Logs*
-** Since we have Micromter Tracing on the classpath, the logs will be automatically correlated (they will contain a unique trace identifier). Now we need to ship the logs. For this demo, we will ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
+** Since we have Micromter Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
 
-IMPORTANT: If you are new to tracing, we need to quickly define a couple of basic terms. You can wrap any operation in a `span`. It has a unique `span id`, contains timing information and some additional metadata (key-value pairs). Because you can produce child spans from spans, the whole tree of spans forms a `trace` that shares the same `trace id` (that is a correlation identifier).
+IMPORTANT: If you are new to tracing, we need to quickly define a couple of basic terms. You can wrap any operation in a `span`. It has a unique `span id` and contains timing information and some additional metadata (key-value pairs). Because you can produce child spans from spans, the whole tree of spans forms a `trace` that shares the same `trace id` (that is, a correlation identifier).
 
-Now we need to add some configuration. We will set up `actuator` and `metrics` to publish percentiles histograms, and we will redefine the logging pattern to include the trace and span identifiers.
+Now we need to add some configuration. We set up `actuator` and `metrics` to publish percentiles histograms, and we redefine the logging pattern to include the trace and span identifiers.
 
 ./src/main/resources/application.properties
 [source,properties]
@@ -100,7 +100,7 @@ management.metrics.distribution.percentiles-histogram.http.server.requests=true
 logging.pattern.level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
 ----
 
-Since we will be running the https://grafana.com/grafana/[Grafana] stack with https://grafana.com/oss/loki/[Loki] and https://grafana.com/oss/tempo/[Tempo] locally, we will configure the `loki-logback-appender` to send logs to the local instance of loki.
+Since we are running the https://grafana.com/grafana/[Grafana] stack with https://grafana.com/oss/loki/[Loki] and https://grafana.com/oss/tempo/[Tempo] locally, we configure the `loki-logback-appender` to send logs to the local instance of Loki.
 
 ./src/main/resources/logback-spring.xml
 [source,xml]
@@ -133,9 +133,9 @@ Since we will be running the https://grafana.com/grafana/[Grafana] stack with ht
 
 == WebMvc Server Code
 
-Time to write some server-side code! We would like to achieve full observability of our application, including metrics, tracing, and additional logging.
+Time to write some server-side code! We want to achieve full observability of our application, including metrics, tracing, and additional logging.
 
-To begin with, we write a controller that will log a message to the console and delegate work to a service.
+To begin with, we write a controller that logs a message to the console and delegate work to a service.
 
 .MyController.java
 [source,java]
@@ -158,7 +158,7 @@ class MyController {
 }
 ----
 
-We would like to have some detailed observation of the `MyService#foo` method. Thanks to having added AOP support, we can use the `@Observed` annotation -- we can just register a `ObservedAspect` bean.
+We want to have some detailed observation of the `MyService#foo` method. Thanks to having added AOP support, we can use the `@Observed` annotation. To do so, we can register a `ObservedAspect` bean.
 
 .MyConfiguration.java
 [source,java]
@@ -203,9 +203,9 @@ class MyUserService {
 }
 ----
 
-With metrics and tracing on the classpath, having this annotation will lead to creation of a `timer`, a `long task timer`, and a `span`. The timer would be named `foo.metric`, the long task timer would be named `foo.metric.active`, and a span would be named `my-contextual-name`.
+With metrics and tracing on the classpath, having this annotation leads to the creation of a `timer`, a `long task timer`, and a `span`. The timer would be named `foo.metric`, the long task timer would be named `foo.metric.active`, and the span would be named `my-contextual-name`.
 
-What about logs? We do not want to write the logging statements manually whenever an observation takes place. What we can do is to create a dedicated handler that will log some text for each observation.
+What about logs? We do not want to write the logging statements manually whenever an observation takes place. What we can do is to create a dedicated handler that logs some text for each observation.
 
 .MyHandler.java
 [source,java]
@@ -241,7 +241,7 @@ class MyHandler implements ObservationHandler<Observation.Context> {
 }
 ----
 
-You might wonder what you should do to have the observability turned on for the controllers? You can register one bean and be ready to go. Once https://github.com/spring-projects/spring-boot/issues/32538[this issue] is fixed, this configuration will not be required to be manually defined.
+You might wonder what you should do to have the observability turned on for the controllers. You can register one bean and be ready to go. Once https://github.com/spring-projects/spring-boot/issues/32538[this issue] is fixed, this configuration will not need to be manually defined.
 
 .MyConfiguration.java
 [source,java]
@@ -266,20 +266,20 @@ That is it! Time for the client side.
 
 == RestTemplate Client Application Setup
 
-As before, we will add the `spring-boot-starter-web` and `spring-boot-starter-actuator` dependencies to have a web server running and Micrometer support added.
+As before, we add the `spring-boot-starter-web` and `spring-boot-starter-actuator` dependencies to have a web server running and Micrometer support added.
 
 Time to add observability related features!
 
 * *Metrics*
 ** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
 * *Tracing*
-** For *Tracing Context Propagation*, with Micrometer Tracing, we need to pick a *tracer* bridge. We will pick https://opentelemetry.io[OpenTelemetry] by adding the `io.micrometer:micrometer-tracing-bridge-otel`.
-*** The other application used in this demo will be using another Tracer library to show an interop between Tracers.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we will produce an OpenZipkin compliant span. To achieve that, we need to add a `io.opentelemetry:opentelemetry-exporter-zipkin` dependency
+** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge. We pick https://opentelemetry.io[OpenTelemetry] by adding the `io.micrometer:micrometer-tracing-bridge-otel`.
+*** The other application used in this demo uses another tracer library to show an interop between tracers.
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OpenZipkin compliant span. To achieve that, we need to add the `io.opentelemetry:opentelemetry-exporter-zipkin` dependency.
 * *Logs*
-** As previously, we will add the `com.github.loki4j:loki-logback-appender:latest.release` dependency to ship logs to Loki.
+** As previously, we add the `com.github.loki4j:loki-logback-appender:latest.release` dependency to ship logs to Loki.
 
-Now we need to add some configuration. We will have almost identical configuration as on the server side. However, we will also add `management.tracing.sampling.probability=1.0` to ensure that all spans are always sent to the latency analysis server.
+Now we need to add some configuration. We add almost identical configuration as we did on the server side. However, we also add `management.tracing.sampling.probability=1.0` to ensure that all spans are always sent to the latency analysis server.
 
 ./src/main/resources/application.properties
 [source,properties]
@@ -328,9 +328,9 @@ The Loki Appender configuration looks exactly the same.
 
 == RestTemplate Application Client Code
 
-Now it is time to write some client-side code! We will send a request with `RestTemplate` to the server side, and we would like to achieve the full observability of our application, including metrics and tracing.
+Now it is time to write some client-side code! We send a request with `RestTemplate` to the server side, and we want to achieve the full observability of our application, including metrics and tracing.
 
-To begin, we need a `RestTemplate` bean that will be automatically instrumented by Spring Boot. Remember to inject the `RestTemplateBuilder` and construct a `RestTemplate` instance from the builder.
+To begin, we need a `RestTemplate` bean that is automatically instrumented by Spring Boot. Remember to inject the `RestTemplateBuilder` and to construct a `RestTemplate` instance from the builder.
 
 .MyConfiguration.java
 [source,java]
@@ -345,7 +345,7 @@ class MyConfiguration {
 }
 ----
 
-Now we can write a `CommandLineRunner` bean that will be wrapped by using the Observation API and that will send a request to the server side. All parts of the API are described in more detail in the following snippet.
+Now we can write a `CommandLineRunner` bean that is wrapped by using the Observation API and that sends a request to the server side. All parts of the API are described in more detail in the following snippet.
 
 .MyConfiguration.java
 [source,java]
@@ -382,11 +382,11 @@ class MyConfiguration {
 
 The Spring Boot AutoConfiguration for WebMvc Observability is not yet ready. As a result, we need to set things up manually. For more information, see this https://github.com/spring-projects/spring-boot/issues/32538[issue].
 
-For the Spring Boot Exemplars AutoConfiguration to work properly, we need to wait for https://github.com/spring-projects/spring-boot/pull/32399[this PR] and https://github.com/spring-projects/spring-boot/pull/32415[this PR] to be merged. Until then, we need to create https://github.com/marcingrzejszczak/observability-boot-blog-post/blob/main/server/src/main/java/com/example/server/ExemplarsConfiguration.java[such configuration] manually.
+For the Spring Boot Exemplars AutoConfiguration to work properly, we need to wait for https://github.com/spring-projects/spring-boot/pull/32399[this PR] and https://github.com/spring-projects/spring-boot/pull/32415[this PR] to be merged. Until then, we need to create https://github.com/marcingrzejszczak/observability-boot-blog-post/blob/main/server/src/main/java/com/example/server/ExemplarsConfiguration.java[our configuration] manually.
 
 == Running It All Together
 
-We have prepared a Docker setup of the whole Observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
+We have prepared a Docker setup of the whole observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
 
 === Running the samples
 
@@ -546,16 +546,16 @@ On the client side, we need to provide the `reflect-config.js` configuration man
 
 = Summary
 
-In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You were also able to visualize the latency, see the correlated logs, and check the metrics that come from you Spring Boot applications.
+In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You can also visualize the latency, see the correlated logs, and check the metrics that come from your Spring Boot applications.
 
 You could also observe your applications by using native images with Spring Native.
 
 = Acknowledgments
 
-Work on the Micrometer Observability would not be possible without the extensive support of the whole Spring team, https://github.com/ttddyy/[Tadaya Tsuyukubo], https://github.com/izeye[Johnny Lim] and all the other contributors and reviewers.
+Work on the Micrometer Observability would not be possible without the extensive support of the whole Spring team, https://github.com/ttddyy/[Tadaya Tsuyukubo], https://github.com/izeye[Johnny Lim], and all the other contributors and reviewers.
 
 = Next Steps
 
 Based on community feedback, we will continue to improve our Observability story. We intend to go https://github.com/micrometer-metrics/micrometer/milestone/177[GA in November this year].
 
-This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check documentation of our projects: https://micrometer.io/docs/contextPropagation[Micrometer Context Propagation], https://micrometer.io/docs[Micrometer], https://micrometer.io/docs/observation[Micrometer Observation], https://micrometer.io/docs/tracing[Micrometer Tracing] and https://micrometer.io/docs/observation#_documentation_building[Micrometer Docs Generator]!
+This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check out the documentation of our projects: https://micrometer.io/docs/contextPropagation[Micrometer Context Propagation], https://micrometer.io/docs[Micrometer], https://micrometer.io/docs/observation[Micrometer Observation], https://micrometer.io/docs/tracing[Micrometer Tracing] and https://micrometer.io/docs/observation#_documentation_building[Micrometer Docs Generator]!
