@@ -207,7 +207,7 @@ For the Spring Boot Exemplars AutoConfiguration to work properly, we need to wai
 
 == Running It All Together
 
-We have prepared a Docker setup of the whole Observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications:
+We have prepared a Docker setup of the whole Observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
 
 include::../../../../RUNNING.adoc[]
 
