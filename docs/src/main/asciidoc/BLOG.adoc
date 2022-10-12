@@ -223,6 +223,6 @@ Work on the Micrometer Observability would not be possible without the extensive
 
 = Next Steps
 
-Based on community feedback, we will continue to improve our Observability story. We intend to go GA in November this year.
+Based on community feedback, we will continue to improve our Observability story. We intend to go https://github.com/micrometer-metrics/micrometer/milestone/177[GA in November this year].
 
-This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots!
+This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check documentation of our projects: https://micrometer.io/docs/contextPropagation[Micrometer Context Propagation], https://micrometer.io/docs[Micrometer], https://micrometer.io/docs/observation[Micrometer Observation], https://micrometer.io/docs/tracing[Micrometer Tracing] and https://micrometer.io/docs/observation#_documentation_building[Micrometer Docs Generator]!

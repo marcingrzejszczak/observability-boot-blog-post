@@ -11,7 +11,7 @@ What is Observability? In our understanding that's _"how well you can understand
 
 The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing] (formerly https://github.com/spring-cloud/spring-cloud-sleuth/[Spring Cloud Sleuth]). The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata used by tracing infrastructure (it's called "remote baggage") that helps to label the observations.
 
-We have been changing the API a lot over the course of this year. The most important change is that we have introduced a new API in Micrometer: the Observation API.
+We have been changing the Micrometer API a lot over the course of this year. The most important change is that we have introduced a new API: the Observation API.
 
 > The idea of its founding was that we want the users to instrument their code once using a single API and have multiple benefits out of it (e.g. metrics, tracing, logging).
 
@@ -241,9 +241,7 @@ class MyHandler implements ObservationHandler<Observation.Context> {
 }
 ----
 
-You might wonder what you should do to have the observability turned on for the controllers? You can register one bean and be ready to go. In the future we, will provide a more automated solution.
-
-// TODO: Remove this section once https://github.com/spring-projects/spring-boot/issues/32538 is merged
+You might wonder what you should do to have the observability turned on for the controllers? You can register one bean and be ready to go. Once https://github.com/spring-projects/spring-boot/issues/32538[this issue] is fixed, this configuration will not be required to be manually defined.
 
 .MyConfiguration.java
 [source,java]
@@ -558,6 +556,6 @@ Work on the Micrometer Observability would not be possible without the extensive
 
 = Next Steps
 
-Based on community feedback, we will continue to improve our Observability story. We intend to go GA in November this year.
+Based on community feedback, we will continue to improve our Observability story. We intend to go https://github.com/micrometer-metrics/micrometer/milestone/177[GA in November this year].
 
-This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots!
+This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check documentation of our projects: https://micrometer.io/docs/contextPropagation[Micrometer Context Propagation], https://micrometer.io/docs[Micrometer], https://micrometer.io/docs/observation[Micrometer Observation], https://micrometer.io/docs/tracing[Micrometer Tracing] and https://micrometer.io/docs/observation#_documentation_building[Micrometer Docs Generator]!
