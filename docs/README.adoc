@@ -1,0 +1,3 @@
+= Blog Post Sources
+
+This folder contains sources for the final version of the blog post. To build the documentation you need to run `./mvnw clean install -Pdocs -pl docs`.
