@@ -9,7 +9,7 @@ The Spring Observability Team has been working on adding Observability support f
 
 What is Observability? In our understanding that's _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think that Observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
 
-The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing]. The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata used by tracing infrastructure (it's called "remote baggage") that helps to label the observations.
+The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing] (formerly https://github.com/spring-cloud/spring-cloud-sleuth/[Spring Cloud Sleuth]). The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata used by tracing infrastructure (it's called "remote baggage") that helps to label the observations.
 
 We have been changing the API a lot over the course of this year. The most important change is that we have introduced a new API in Micrometer: the Observation API.
 
@@ -77,7 +77,7 @@ Now it's time to add observability related features!
 ** For *Tracing Context Propagation*, with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We will pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
 ** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case we will produce an Zipkin-compliant span. To achieve that, we need to add a `io.zipkin.reporter2:zipkin-reporter-brave` dependency.
 * *Logs*
-** Since we have tracing-related metrics on the classpath, the logs will be automatically correlated (they will contain a unique trace identifier). Now we need to ship the logs. For this demo, we will ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
+** Since we have Micromter Tracing on the classpath, the logs will be automatically correlated (they will contain a unique trace identifier). Now we need to ship the logs. For this demo, we will ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
 
 IMPORTANT: If you are new to tracing, we need to quickly define a couple of basic terms. You can wrap any operation in a `span`. It has a unique `span id`, contains timing information and some additional metadata (key-value pairs). Because you can produce child spans from spans, the whole tree of spans forms a `trace` that shares the same `trace id` (that is a correlation identifier).
 
@@ -89,14 +89,14 @@ Now we need to add some configuration. We will set up `actuator` and `metrics` t
 server.port=7654
 spring.application.name=server
 
-# For demo purposes we expose all actuator endpoints (especially the prometheus one)
-management.endpoints.enabled-by-default=true
-management.endpoints.web.exposure.include=*
+# All traces should be sent to latency analysis tool
+management.tracing.sampling.probability=1.0
+management.endpoints.web.exposure.include=prometheus
 
-# For exemplars support
+# For Exemplars to work we need histogram buckets
 management.metrics.distribution.percentiles-histogram.http.server.requests=true
 
-# traceID and spanId are predefined MDC keys
+# traceID and spanId are predefined MDC keys - we want the logs to include them
 logging.pattern.level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
 ----
 
@@ -276,6 +276,7 @@ Time to add observability related features!
 ** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
 * *Tracing*
 ** For *Tracing Context Propagation*, with Micrometer Tracing, we need to pick a *tracer* bridge. We will pick https://opentelemetry.io[OpenTelemetry] by adding the `io.micrometer:micrometer-tracing-bridge-otel`.
+*** The other application used in this demo will be using another Tracer library to show an interop between Tracers.
 ** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we will produce an OpenZipkin compliant span. To achieve that, we need to add a `io.opentelemetry:opentelemetry-exporter-zipkin` dependency
 * *Logs*
 ** As previously, we will add the `com.github.loki4j:loki-logback-appender:latest.release` dependency to ship logs to Loki.
@@ -290,13 +291,9 @@ spring.application.name=client
 
 # All traces should be sent to latency analysis tool
 management.tracing.sampling.probability=1.0
-management.endpoints.enabled-by-default=true
-management.endpoints.web.exposure.include=*
+management.endpoints.web.exposure.include=prometheus
 
-# To get exemplars
-management.metrics.distribution.percentiles-histogram.http.server.requests=true
-
-# traceID and spanId are predefined MDC keys
+# traceID and spanId are predefined MDC keys - we want the logs to include them
 logging.pattern.level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
 ----
 
@@ -401,11 +398,11 @@ To run the samples:
 +
 [source,bash]
 ----
-$ docker-compose up
+$ docker compose up
 ----
 +
 * To access Prometheus go to http://localhost:9090/
-* To access Grafana go to http://localhost:3000/ (Grafana credentials: admin:admin)
+* To access Grafana go to http://localhost:3000/
 
 . Run the server side application (this will block your current terminal window).
 +
@@ -457,7 +454,7 @@ If you want to see the metrics from your Observation that you have manually crea
 
 image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/my-observation.png[]
 
-== Running It All Together using Spring Native
+== Running It All Together with AOT Support
 
 To better understand how Spring Boot supports Native, please read https://spring.io/blog/2022/09/26/native-support-in-spring-boot-3-0-0-m5[this excellent blog post]. We reuse that knowledge to run the previously created applications using Spring Native.
 
@@ -554,6 +551,10 @@ On the client side, we need to provide the `reflect-config.js` configuration man
 In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You were also able to visualize the latency, see the correlated logs, and check the metrics that come from you Spring Boot applications.
 
 You could also observe your applications by using native images with Spring Native.
+
+= Acknowledgments
+
+Work on the Micrometer Observability would not be possible without the extensive support of the whole Spring team, https://github.com/ttddyy/[Tadaya Tsuyukubo], https://github.com/izeye[Johnny Lim] and all the other contributors and reviewers.
 
 = Next Steps
 

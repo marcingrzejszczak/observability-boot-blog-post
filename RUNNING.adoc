@@ -6,11 +6,11 @@ To run the samples:
 +
 [source,bash]
 ----
-$ docker-compose up
+$ docker compose up
 ----
 +
 * To access Prometheus go to http://localhost:9090/
-* To access Grafana go to http://localhost:3000/ (Grafana credentials: admin:admin)
+* To access Grafana go to http://localhost:3000/
 
 . Run the server side application (this will block your current terminal window).
 +
@@ -62,7 +62,7 @@ If you want to see the metrics from your Observation that you have manually crea
 
 image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/my-observation.png[]
 
-== Running It All Together using Spring Native
+== Running It All Together with AOT Support
 
 To better understand how Spring Boot supports Native, please read https://spring.io/blog/2022/09/26/native-support-in-spring-boot-3-0-0-m5[this excellent blog post]. We reuse that knowledge to run the previously created applications using Spring Native.
 
