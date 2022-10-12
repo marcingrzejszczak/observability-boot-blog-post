@@ -9,7 +9,7 @@ The Spring Observability Team has been working on adding Observability support f
 
 What is Observability? In our understanding that's _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think that Observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
 
-The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing]. The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we are adding remote baggage (key-values that would be automatically sent over the wire) support.
+The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/docs[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing]. The most notable changes are that it will contain inbuilt support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata used by tracing infrastructure (it's called "remote baggage") that helps to label the observations.
 
 We have been changing the API a lot over the course of this year. The most important change is that we have introduced a new API in Micrometer: the Observation API.
 
@@ -18,20 +18,6 @@ We have been changing the API a lot over the course of this year. The most impor
 This blog post details what you need to know to about that API and how you can use it to provide more insights into your application.
 
 = How Does Micrometer Observation Work?
-
-On a high level, the lifecycle of an Observation looks as follows:
-
-[source]
-----
-        Observation           Observation                   Observation                    Observation
-        Context               Context                       Context                        Context
-Created ----------> Started ----------> (Optionally) Error ----------> (Optionally) Event ----------> Stopped
-                           |
-                           |
-                            \---------->   Scope Started   ----------> Scope Finished
-                              Observation                  Observation
-                              Context                      Context
-----
 
 For any Observation to happen, you need to register `ObservationHandler` objects through an `ObservationRegistry`. An `ObservationHandler` reacts only to supported implementations of an `Observation.Context` and can create timers, spans, and logs by reacting to the lifecycle events of an Observation such as
 
@@ -42,12 +28,32 @@ For any Observation to happen, you need to register `ObservationHandler` objects
 * `scope started` - Observation opens a Scope. The Scope must be closed when no longer used. Handlers can create thread local variables on start that are cleared upon closing of the scope. Happens when the `Observation#openScope()` method gets called.
 * `scope stopped` - Observation stops a Scope. Happens when the `Observation.Scope#close()` method gets called.
 
-Whenever a state transition happens, an `ObservationHandler` method (such as `onStart(T extends Observation.Context ctx)`, `onStop(T extends Observation.Context ctx)`, and so on) are called. To pass state between the handler methods, you can use the `Observation.Context`.
+Whenever any of these methods is called, an `ObservationHandler` method (such as `onStart(T extends Observation.Context ctx)`, `onStop(T extends Observation.Context ctx)`, and so on) are called. To pass state between the handler methods, you can use the `Observation.Context`.
+
+This is how Observation state diagram looks like:
+
+[source]
+----
+        Observation           Observation
+        Context               Context
+Created ----------> Started ----------> Stopped
+----
+
+This is how Observation Scope state diagram looks like:
+
+[source]
+----
+              Observation
+              Context
+Scope Started ----------> Scope Finished
+----
+
+To make it possible to debug production problems an Observation needs additional metadata such as key-value pairs (also known as tags). You can then query your metrics or distributed tracing backend by those tags to find the required data. Tags can be either of high or low cardinality.
+
+IMPORTANT:  *High cardinality* means that a pair will have an unbounded number of possible values. An HTTP URL is a good
+example of such a key value (e.g. `/foo/user1234`, `/foo/user2345` etc.). *Low cardinality* means that a key value will  have a bounded number of possible values. A *templated* HTTP URL is a good example of such a key value (e.g. `/foo/{userId}`).
 
 To separate Observation lifecycle operations from an Observation configuration (such as names and low and high cardinality tags), you can use the `ObservationConvention` that provides an easy way of overriding the default naming conventions.
-
-IMPORTANT:  *High cardinality* means that a key value will have an unbounded number of possible values. An HTTP URL is a good
-example of such a key value (e.g. `/foo/bar`, `/foo/baz` etc.). *Low cardinality* means that a key value will  have a bounded number of possible values. A templated HTTP URL is a good example of such a key value (e.g. `/foo/{userId}`).
 
 = Building Your First Observed Application
 
@@ -59,7 +65,7 @@ We will build a Spring WebMvc server application and a client that will call the
 
 Since we want to start an HTTP server, we have to pick the `org.springframework.boot:spring-boot-starter-web` dependency.
 
-To add aspect support, we need to add the `org.springframework.boot:spring-boot-starter-aop` dependency.
+To create Observations using `@Observed` aspect, we need to add the `org.springframework.boot:spring-boot-starter-aop` dependency.
 
 You need to chose `spring-boot-starter-actuator` to add observation features to your application (to add https://micrometer.io[Micrometer] to the classpath).
 
@@ -138,16 +144,16 @@ To begin with, we write a controller that will log a message to the console and 
 class MyController {
 
     private static final Logger log = LoggerFactory.getLogger(MyController.class);
-    private final MyService myService;
+    private final MyUserService myUserService;
 
-    MyController(MyService myService) {
-        this.myService = myService;
+    MyController(MyUserService myUserService) {
+        this.myUserService = myUserService;
     }
 
-    @GetMapping("/foo")
-    String myMapping() {
+    @GetMapping("/{userId}")
+    String userName(@PathVariable("userId") String userId) {
         log.info("Got a request");
-        return myService.foo();
+        return myUserService.userName(userId);
     }
 }
 ----
@@ -171,15 +177,21 @@ class MyConfiguration {
 [source,java]
 ----
 @Service
-class MyService {
+class MyUserService {
+
+    private static final Logger log = LoggerFactory.getLogger(MyUserService.class);
 
     private final Random random = new Random();
 
     // Example of using an annotation to observe methods
-    @Observed(name = "foo.metric",
-            contextualName = "my-contextual-name",
-            lowCardinalityKeyValues = {"low.cardinality.key", "low cardinality value"})
-    String foo() {
+    // <user.name> will be used as a metric name
+    // <getting-user-name> will be used as a span  name
+    // <userType=userType2> will be set as a tag for both metric & span
+    @Observed(name = "user.name",
+            contextualName = "getting-user-name",
+            lowCardinalityKeyValues = {"userType", "userType2"})
+    String userName(String userId) {
+        log.info("Getting user name for user with id <{}>", userId);
         try {
             Thread.sleep(random.nextLong(200L)); // simulates latency
         }
@@ -206,17 +218,25 @@ class MyHandler implements ObservationHandler<Observation.Context> {
 
     @Override
     public void onStart(Observation.Context context) {
-        log.info("Before running the observation for context [{}]", context.getName());
+        log.info("Before running the observation for context [{}], userType [{}]", context.getName(), getUserTypeFromContext(context));
     }
 
     @Override
     public void onStop(Observation.Context context) {
-        log.info("After running the observation for context [{}]", context.getName());
+        log.info("After running the observation for context [{}], userType [{}]", context.getName(), getUserTypeFromContext(context));
     }
 
     @Override
     public boolean supportsContext(Observation.Context context) {
         return true;
+    }
+
+    private String getUserTypeFromContext(Observation.Context context) {
+        return StreamSupport.stream(context.getLowCardinalityKeyValues().spliterator(), false)
+                .filter(keyValue -> "userType".equals(keyValue.getKey()))
+                .map(KeyValue::getValue)
+                .findFirst()
+                .orElse("UNKNOWN");
     }
 }
 ----
@@ -339,14 +359,16 @@ Now we can write a `CommandLineRunner` bean that will be wrapped by using the Ob
 class MyConfiguration {
     @Bean
     CommandLineRunner myCommandLineRunner(ObservationRegistry registry, RestTemplate restTemplate) {
+        Random highCardinalityValues = new Random(); // Simulates potentially large number of values
+        List<String> lowCardinalityValues = Arrays.asList("userType1", "userType2", "userType3"); // Simulates low number of values
         return args -> {
             // Example of using the Observability API manually
             // <my.observation> is a "technical" name that does not depend on the context. It will be used to name e.g. Metrics
              Observation.createNotStarted("my.observation", registry)
                      // Low cardinality means that the number of potential values won't be big. Low cardinality entries will end up in e.g. Metrics
-                    .lowCardinalityKeyValue("low.cardinality.key", "low cardinality value")
+                    .lowCardinalityKeyValue("userType", randomUserTypePicker(lowCardinalityValues))
                      // High cardinality means that the number of potential values can be large. High cardinality entries will end up in e.g. Spans
-                    .highCardinalityKeyValue("high.cardinality.key", "high cardinality value")
+                    .highCardinalityKeyValue("userId", String.valueOf(highCardinalityValues.nextLong(100_000)))
                      // <command-line-runner> is a "contextual" name that gives more details within the provided context. It will be used to name e.g. Spans
                     .contextualName("command-line-runner")
                      // The following lambda will be executed with an observation scope (e.g. all the MDC entries will be populated with tracing information). Also the observation will be started, stopped and if an error occurred it will be recorded on the observation
@@ -409,7 +431,7 @@ You should see log statements similar to these:
 
 . Go to http://localhost:3000/[Grafana], go to dashboards, and click on the `Logs, Traces, Metrics` dashboard. There you can pick a trace ID value (for example, `bbe3aea006077640b66d40f3e62f04b9`) to find all logs and traces from both applications that correspond to that trace ID. You should see a following correlated view of logs and traces related to the same trace identifier, and you will see metrics taking place at the same time range. The metrics are related to HTTP request processing latency. These come from the automated Spring Boot WebMvc instrumentation that uses the Micrometer API.
 +
-image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/logs_metrics_traces.jpeg[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/logs-metrics-traces.png[]
 +
 Notice a diamond shape in the metrics. These are https://grafana.com/docs/grafana/latest/basics/exemplars/[`Exemplars`]. Those are "`specific trace representative of measurement taken in a given time interval`". If you click on the shape, you can jump to the trace ID view to see the corresponding trace.
 +
@@ -531,7 +553,7 @@ On the client side, we need to provide the `reflect-config.js` configuration man
 
 In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You were also able to visualize the latency, see the correlated logs, and check the metrics that come from you Spring Boot applications.
 
-You could also able observe your applications by using native images with Spring Native.
+You could also observe your applications by using native images with Spring Native.
 
 = Next Steps
 
