@@ -12,7 +12,7 @@ This blog post details what you need to know to about that API and how you can u
 
 = How Does Micrometer Observation Work?
 
-For any observation to happen, you need to register `ObservationHandler` objects through an `ObservationRegistry`. An `ObservationHandler` reacts only to supported implementations of an `Observation.Context` and can create timers, spans, and logs by reacting to the lifecycle events of an observation, such as:
+For any observation to happen, you need to register `ObservationHandler` objects through an `ObservationRegistry`. An `ObservationHandler` reacts only to supported implementations of an `Observation.Context` and can create, for example, timers, spans, and logs by reacting to the lifecycle events of an observation, such as:
 
 * `start` - Observation has been started. Happens when the `Observation#start()` method gets called.
 * `stop` - Observation has been stopped. Happens when the `Observation#stop()` method gets called.
@@ -50,7 +50,7 @@ To separate observation lifecycle operations from an observation configuration (
 
 = Building Your First Observed Application
 
-The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-RC1 and your favorite build tool.
+The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-SNAPSHOT (you can switch to RC1 once https://calendar.spring.io/[it's available]) and your favorite build tool.
 
 We will build a Spring WebMvc server application and a client to call the server using RestTemplate. We start with the server side.
 
@@ -68,13 +68,14 @@ Now it is time to add observability related features!
 ** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
 * *Tracing*
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
+*** The other application used in this demo uses another tracer library to show an interop between tracers.
 ** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an Zipkin-compliant span. To achieve that, we need to add the `io.zipkin.reporter2:zipkin-reporter-brave` dependency.
 * *Logs*
-** Since we have Micromter Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
+** Since we have Micrometer Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
 
 IMPORTANT: If you are new to tracing, we need to quickly define a couple of basic terms. You can wrap any operation in a `span`. It has a unique `span id` and contains timing information and some additional metadata (key-value pairs). Because you can produce child spans from spans, the whole tree of spans forms a `trace` that shares the same `trace id` (that is, a correlation identifier).
 
-Now we need to add some configuration. We set up `actuator` and `metrics` to publish percentiles histograms, and we redefine the logging pattern to include the trace and span identifiers.
+Now we need to add some configuration. We set up `actuator` and `metrics` to publish percentiles histograms, and we redefine the logging pattern to include the trace and span identifiers. We set the sampling probability to `1.0` to send all traces to latency analysis tool.
 
 ./src/main/resources/application.properties
 [source,properties]
@@ -119,7 +120,7 @@ include::../../../../server/src/main/java/com/example/server/ServerApplication.j
 include::../../../../server/src/main/java/com/example/server/ServerApplication.java[tags=service]
 ----
 
-With metrics and tracing on the classpath, having this annotation leads to the creation of a `timer`, a `long task timer`, and a `span`. The timer would be named `foo.metric`, the long task timer would be named `foo.metric.active`, and the span would be named `my-contextual-name`.
+With metrics and tracing on the classpath, having this annotation leads to the creation of a `timer`, a `long task timer`, and a `span`. The timer would be named `user.name`, the long task timer would be named `user.name.active`, and the span would be named `getting-user-name`.
 
 What about logs? We do not want to write the logging statements manually whenever an observation takes place. What we can do is to create a dedicated handler that logs some text for each observation.
 
@@ -152,12 +153,11 @@ Time to add observability related features!
 ** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
 * *Tracing*
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge. We pick https://opentelemetry.io[OpenTelemetry] by adding the `io.micrometer:micrometer-tracing-bridge-otel`.
-*** The other application used in this demo uses another tracer library to show an interop between tracers.
 ** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OpenZipkin compliant span. To achieve that, we need to add the `io.opentelemetry:opentelemetry-exporter-zipkin` dependency.
 * *Logs*
 ** As previously, we add the `com.github.loki4j:loki-logback-appender:latest.release` dependency to ship logs to Loki.
 
-Now we need to add some configuration. We add almost identical configuration as we did on the server side. However, we also add `management.tracing.sampling.probability=1.0` to ensure that all spans are always sent to the latency analysis server.
+Now we need to add some configuration. We add almost identical configuration as we did on the server side.
 
 ./src/main/resources/application.properties
 [source,properties]
@@ -203,7 +203,7 @@ include::../../../../client/src/main/java/com/example/client/ClientApplication.j
 
 The Spring Boot AutoConfiguration for WebMvc Observability is not yet ready. As a result, we need to set things up manually. For more information, see this https://github.com/spring-projects/spring-boot/issues/32538[issue].
 
-For the Spring Boot Exemplars AutoConfiguration to work properly, we need to wait for https://github.com/spring-projects/spring-boot/pull/32399[this PR] and https://github.com/spring-projects/spring-boot/pull/32415[this PR] to be merged. Until then, we need to create https://github.com/marcingrzejszczak/observability-boot-blog-post/blob/main/server/src/main/java/com/example/server/ExemplarsConfiguration.java[our configuration] manually.
+For the Spring Boot https://grafana.com/docs/grafana/latest/basics/exemplars/[Exemplars] AutoConfiguration to work properly, we need to wait for https://github.com/spring-projects/spring-boot/pull/32399[this PR] and https://github.com/spring-projects/spring-boot/pull/32415[this PR] to be merged. Until then, we need to create https://github.com/marcingrzejszczak/observability-boot-blog-post/blob/main/server/src/main/java/com/example/server/ExemplarsConfiguration.java[our configuration] manually.
 
 == Running It All Together
 

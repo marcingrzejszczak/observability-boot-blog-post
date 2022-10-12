@@ -54,9 +54,9 @@ This is how the correlated logs view would look in Loki.
 
 image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/correlated-logs.png[]
 
-If you want to see the `@Observed` annotated method metrics, you can go to the `Prometheus` view and find the `foo_metric` Timer.
+If you want to see the `@Observed` annotated method metrics, you can go to the `Prometheus` view and find the `user_name` Timer.
 
-image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/foo-metric.png[]
+image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/annotation-metric.png[]
 
 If you want to see the metrics from your Observation that you have manually created, go to the `Prometheus` view and find the `my_observation` Timer.
 

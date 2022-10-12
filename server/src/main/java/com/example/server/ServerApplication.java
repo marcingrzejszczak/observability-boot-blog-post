@@ -44,7 +44,7 @@ public class ServerApplication {
 				DispatcherType.INCLUDE, DispatcherType.REQUEST);
 		filterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
 		// We provide a list of URLs that we want to create observations for
-		filterRegistrationBean.setUrlPatterns(Collections.singletonList("/foo"));
+		filterRegistrationBean.setUrlPatterns(Collections.singletonList("/user/*"));
 		return filterRegistrationBean;
 	}
 	// end::filter[]
@@ -70,7 +70,7 @@ class MyController {
 		this.myUserService = myUserService;
 	}
 
-	@GetMapping("/{userId}")
+	@GetMapping("/user/{userId}")
 	String userName(@PathVariable("userId") String userId) {
 		log.info("Got a request");
 		return myUserService.userName(userId);
