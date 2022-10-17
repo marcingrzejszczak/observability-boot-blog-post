@@ -78,7 +78,7 @@ Now it is time to add observability related features!
 *** The client application that we will create for this demo will use another tracer library to show an interop between tracers.
 ** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an Zipkin-compliant span. To achieve that, we need to add the `io.zipkin.reporter2:zipkin-reporter-brave` dependency.
 * *Logs*
-** Since we have Micrometer Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender:latest.release` dependency.
+** Since we have Micrometer Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version)
 
 IMPORTANT: If you are new to tracing, we need to quickly define a couple of basic terms. You can wrap any operation in a `span`. It has a unique `span id` and contains timing information and some additional metadata (key-value pairs). Because you can produce child spans from spans, the whole tree of spans forms a `trace` that shares the same `trace id` (that is, a correlation identifier).
 
@@ -162,7 +162,7 @@ Time to add observability related features!
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge. We pick https://opentelemetry.io[OpenTelemetry] by adding the `io.micrometer:micrometer-tracing-bridge-otel`.
 ** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OpenZipkin compliant span. To achieve that, we need to add the `io.opentelemetry:opentelemetry-exporter-zipkin` dependency.
 * *Logs*
-** As previously, we add the `com.github.loki4j:loki-logback-appender:latest.release` dependency to ship logs to Loki.
+** As previously, we add the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version) to ship logs to Loki.
 
 Now we need to add some configuration. We add almost identical configuration as we did on the server side.
 
