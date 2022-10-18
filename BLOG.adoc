@@ -269,7 +269,7 @@ class MyConfiguration {
     // You must set this manually until this is registered in Boot
     @Bean
     FilterRegistrationBean observationWebFilter(ObservationRegistry observationRegistry) {
-        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new HttpRequestsObservationFilter(observationRegistry));
+        FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new ServerHttpObservationFilter(observationRegistry));
         filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD,
                 DispatcherType.INCLUDE, DispatcherType.REQUEST);
         filterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);

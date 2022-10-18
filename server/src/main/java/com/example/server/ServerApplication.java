@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.observation.HttpRequestsObservationFilter;
+import org.springframework.web.filter.ServerHttpObservationFilter;
 
 @SpringBootApplication
 @Import(ExemplarsConfiguration.class)
@@ -39,7 +39,7 @@ public class ServerApplication {
 	// You must set this manually until this is registered in Boot
 	@Bean
 	FilterRegistrationBean observationWebFilter(ObservationRegistry observationRegistry) {
-		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new HttpRequestsObservationFilter(observationRegistry));
+		FilterRegistrationBean filterRegistrationBean = new FilterRegistrationBean(new ServerHttpObservationFilter(observationRegistry));
 		filterRegistrationBean.setDispatcherTypes(DispatcherType.ASYNC, DispatcherType.ERROR, DispatcherType.FORWARD,
 				DispatcherType.INCLUDE, DispatcherType.REQUEST);
 		filterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
