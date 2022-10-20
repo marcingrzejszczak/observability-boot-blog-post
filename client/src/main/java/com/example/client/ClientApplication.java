@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-@Import(ExemplarsConfiguration.class)
 public class ClientApplication {
 
 	private static final Logger log = LoggerFactory.getLogger(ClientApplication.class);

@@ -137,17 +137,6 @@ What about logs? We do not want to write the logging statements manually wheneve
 include::../../../../server/src/main/java/com/example/server/ServerApplication.java[tags=handler]
 ----
 
-You might wonder what you should do to have the observability turned on for the controllers. You can register one bean and be ready to go. Once https://github.com/spring-projects/spring-boot/issues/32538[this issue] is fixed, this configuration will not need to be manually defined.
-
-.MyConfiguration.java
-[source,java,indent=0]
-----
-@Configuration(proxyBeanMethods = false)
-class MyConfiguration {
-include::../../../../server/src/main/java/com/example/server/ServerApplication.java[tags=filter]
-}
-----
-
 That is it! Time for the client side.
 
 == RestTemplate Client Application Setup
@@ -209,8 +198,6 @@ include::../../../../client/src/main/java/com/example/client/ClientApplication.j
 === Limitations
 
 The Spring Boot AutoConfiguration for WebMvc Observability is not yet ready. As a result, we need to set things up manually. For more information, see this https://github.com/spring-projects/spring-boot/issues/32538[issue].
-
-For the Spring Boot https://grafana.com/docs/grafana/latest/basics/exemplars/[Exemplars] AutoConfiguration to work properly, we need to wait for https://github.com/spring-projects/spring-boot/pull/32399[this PR] and https://github.com/spring-projects/spring-boot/pull/32415[this PR] to be merged. Until then, we need to create https://github.com/marcingrzejszczak/observability-boot-blog-post/blob/main/server/src/main/java/com/example/server/ExemplarsConfiguration.java[our configuration] manually.
 
 == Running It All Together
 

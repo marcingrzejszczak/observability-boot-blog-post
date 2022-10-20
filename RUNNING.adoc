@@ -72,7 +72,7 @@ To build the applications, you need GraalVM on your path. If you use `SDKMan`, i
 
 [indent=0]
 ----
-sdk install java 22.2.r17-nik
+sdk install java 22.3.r17-nik
 ----
 
 See also https://www.graalvm.org/java/quickstart/[GraalVM Quickstart].
@@ -81,7 +81,7 @@ To build the application with Maven, you need to enable the `native` profile:
 
 [indent=0]
 ----
-$ ./mvnw -Pnative clean package
+$ ./mvnw native:compile -Pnative
 ----
 
 === Running
