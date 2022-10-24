@@ -375,10 +375,6 @@ class MyConfiguration {
 }
 ----
 
-=== Limitations
-
-The Spring Boot AutoConfiguration for WebMvc Observability is not yet ready. As a result, we need to set things up manually. For more information, see this https://github.com/spring-projects/spring-boot/issues/32538[issue].
-
 == Running It All Together
 
 We have prepared a Docker setup of the whole observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
@@ -530,12 +526,10 @@ You should get output similar to this:
 2022-10-10T12:57:17.820+02:00  INFO [server,,] 81760 --- [nio-7654-exec-8] com.example.server.MyHandler             : After running the observation for context [http.server.requests]
 ----
 
-You can check Grafana for metrics and traces. Read the <<native-support-limitations>> section on why you won't find any pushed logs to Loki.
+You can check Grafana for metrics, traces and logs!
 
 [[native-support-limitations]]
 === Native Support Limitations
-
-You will not see logs being pushed to Loki just yet. For more information, look into https://github.com/spring-projects/spring-boot/issues/25847[this issue].
 
 On the client side, we need to provide the `reflect-config.js` configuration manually. For more information, see https://github.com/open-telemetry/opentelemetry-java/pull/4832[this PR].
 

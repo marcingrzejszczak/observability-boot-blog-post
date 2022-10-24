@@ -195,10 +195,6 @@ include::../../../../client/src/main/java/com/example/client/ClientApplication.j
 }
 ----
 
-=== Limitations
-
-The Spring Boot AutoConfiguration for WebMvc Observability is not yet ready. As a result, we need to set things up manually. For more information, see this https://github.com/spring-projects/spring-boot/issues/32538[issue].
-
 == Running It All Together
 
 We have prepared a Docker setup of the whole observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
