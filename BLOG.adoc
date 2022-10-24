@@ -455,20 +455,9 @@ To better understand how Spring Boot supports Native, please read https://spring
 
 To build the applications, you need GraalVM on your path. If you use `SDKMan`, invoke the following:
 
-You can skip this section if Bellsofr Liberica Native Image Kit 22.3 is already present in `SDKMan`.
 [indent=0]
 ----
-$ # First download the 22.3 version of Bellsoft Liberica Native Image Kit 22.3 from https://bell-sw.com/pages/downloads/native-image-kit/#/nik-22-17-ea
-$ # Unpack the Kit (e.g to ~/foo/bar/22.3/ where ~/foo/bar/22.3/ would be the root of the JDK installation)
-$ # Use SDKMan to install the kit
-$ sdk install java 22.3.r17-nik  ~/foo/bar/22.3/
-----
-
-Use the installed SDK
-
-[indent=0]
-----
-$ sdk use java 22.3.r17-nik
+sdk install java 22.3.r17.ea-nik
 ----
 
 See also https://www.graalvm.org/java/quickstart/[GraalVM Quickstart].
