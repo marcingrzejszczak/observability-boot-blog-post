@@ -87,7 +87,7 @@
                         "uid": "tempo"
                     },
                     "query": "$traceID",
-                    "queryType": "traceId",
+                    "queryType": "traceql",
                     "refId": "A"
                 }
             ],
