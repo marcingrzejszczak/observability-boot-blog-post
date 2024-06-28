@@ -89,11 +89,12 @@ To add observation features to your application, choose `spring-boot-starter-act
 Now it is time to add observability related features!
 
 * *Metrics*
-** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
+** For Micrometer metrics with OTLP, we need to add the `io.micrometer:micrometer-registry-otlp` dependency.
 * *Tracing*
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
 *** The client application that we will create for this demo will use another tracer library to show an interop between tracers.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an Zipkin-compliant span. To achieve that, we need to add the `io.zipkin.reporter2:zipkin-reporter-brave` dependency.
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:brave-encoder-otel` dependency.
+// TODO: Add info about additional configuration (the ByteSender)
 * *Logs*
 ** Since we have Micrometer Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version)
 

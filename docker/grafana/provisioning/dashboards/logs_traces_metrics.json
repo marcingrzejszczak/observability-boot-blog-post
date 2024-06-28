@@ -59,12 +59,12 @@
                         "uid": "loki"
                     },
                     "editorMode": "builder",
-                    "expr": "{traceID=\"$traceID\"}",
+                    "expr": "{traceId=\"$traceId\"}",
                     "queryType": "range",
                     "refId": "A"
                 }
             ],
-            "title": "Logs with trace ID $traceID",
+            "title": "Logs with trace ID $traceId",
             "type": "logs"
         },
         {
@@ -86,12 +86,12 @@
                         "type": "tempo",
                         "uid": "tempo"
                     },
-                    "query": "$traceID",
+                    "query": "$traceId",
                     "queryType": "traceId",
                     "refId": "A"
                 }
             ],
-            "title": "Trace View for trace with id $traceID",
+            "title": "Trace View for trace with id $traceId",
             "type": "traces"
         },
         {
@@ -146,7 +146,7 @@
                             }
                         ]
                     },
-                    "unit": "s"
+                    "unit": "ms"
                 },
                 "overrides": []
             },
@@ -176,7 +176,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(1.00, sum(rate(http_server_requests_seconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(1.00, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
                     "legendFormat": "max",
                     "range": true,
                     "refId": "A"
@@ -188,7 +188,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
                     "hide": false,
                     "legendFormat": "tp99",
                     "range": true,
@@ -201,7 +201,7 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
                     "hide": false,
                     "legendFormat": "tp95",
                     "range": true,
@@ -227,14 +227,14 @@
                     "type": "loki",
                     "uid": "loki"
                 },
-                "definition": "label_values(traceID)",
+                "definition": "label_values(traceId)",
                 "hide": 0,
                 "includeAll": false,
                 "label": "Trace ID",
                 "multi": false,
-                "name": "traceID",
+                "name": "traceId",
                 "options": [],
-                "query": "label_values(traceID)",
+                "query": "label_values(traceId)",
                 "refresh": 1,
                 "regex": "",
                 "skipUrlSync": false,

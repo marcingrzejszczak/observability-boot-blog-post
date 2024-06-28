@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.0-SNAPSHOT</version>
+		<version>3.3.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -26,28 +26,30 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<!-- For Metrics -->
+		<!-- For OTLP -->
 		<dependency>
 			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
+			<artifactId>micrometer-registry-otlp</artifactId>
 		</dependency>
 
-		<!-- OpenTelemetry version -->
 		<!-- For Tracing -->
 		<dependency>
 			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-tracing-bridge-otel</artifactId>
+			<artifactId>micrometer-tracing-bridge-brave</artifactId>
 		</dependency>
 		<!-- For Latency Visualization -->
+		<!-- TODO: Migrate to GA once released -->
 		<dependency>
-			<groupId>io.opentelemetry</groupId>
-			<artifactId>opentelemetry-exporter-zipkin</artifactId>
+			<groupId>com.github.openzipkin-contrib</groupId>
+			<artifactId>zipkin-otel</artifactId>
+			<version>otel-SNAPSHOT</version>
 		</dependency>
 
 		<!-- For pushing logs out -->
 		<dependency>
 			<groupId>com.github.loki4j</groupId>
 			<artifactId>loki-logback-appender</artifactId>
-			<version>1.3.2</version>
+			<version>1.5.1</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -66,7 +68,11 @@
 			</plugin>
 		</plugins>
 	</build>
-	<repositories>
+	<repositories><!-- For snapshots -->
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
 		<repository>
 			<id>spring-milestones</id>
 			<name>Spring Milestones</name>
