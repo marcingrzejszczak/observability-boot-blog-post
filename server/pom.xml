@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.1</version>
+		<version>3.3.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -45,16 +45,16 @@
 		<!-- For Latency Visualization -->
 		<!-- TODO: Migrate to GA once released -->
 		<dependency>
-			<groupId>com.github.openzipkin-contrib</groupId>
-			<artifactId>zipkin-otel</artifactId>
-			<version>otel-SNAPSHOT</version>
+			<groupId>io.zipkin.contrib.otel</groupId>
+			<artifactId>encoder-brave</artifactId>
+			<version>0.1.0-SNAPSHOT</version>
 		</dependency>
 
 		<!-- For pushing logs out -->
 		<dependency>
 			<groupId>com.github.loki4j</groupId>
 			<artifactId>loki-logback-appender</artifactId>
-			<version>1.5.1</version>
+			<version>1.5.2</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -74,10 +74,13 @@
 		</plugins>
 	</build>
 	<repositories>
-		<!-- For snapshots -->
 		<repository>
-			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
+			<id>zipkin-snapshot</id>
+			<name>Zipkin Snapshots</name>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
 		</repository>
 		<repository>
 			<id>spring-milestones</id>

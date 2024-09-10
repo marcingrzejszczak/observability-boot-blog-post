@@ -77,7 +77,7 @@ class MyUserService {
 		catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
-		return "foo";
+		return "foo " + userId;
 	}
 }
 // end::service[]

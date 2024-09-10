@@ -24,8 +24,7 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 6,
-    "iteration": 1654517000502,
+    "id": 2,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -86,9 +85,18 @@
                         "type": "tempo",
                         "uid": "tempo"
                     },
+                    "filters": [
+                        {
+                            "id": "ede501e2",
+                            "operator": "=",
+                            "scope": "span"
+                        }
+                    ],
+                    "limit": 20,
                     "query": "$traceId",
-                    "queryType": "traceId",
-                    "refId": "A"
+                    "queryType": "traceql",
+                    "refId": "A",
+                    "tableType": "traces"
                 }
             ],
             "title": "Trace View for trace with id $traceId",
@@ -105,6 +113,9 @@
                         "mode": "palette-classic"
                     },
                     "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
                         "axisLabel": "",
                         "axisPlacement": "auto",
                         "barAlignment": 0,
@@ -116,6 +127,7 @@
                             "tooltip": false,
                             "viz": false
                         },
+                        "insertNulls": false,
                         "lineInterpolation": "linear",
                         "lineWidth": 1,
                         "pointSize": 5,
@@ -161,7 +173,8 @@
                 "legend": {
                     "calcs": [],
                     "displayMode": "list",
-                    "placement": "bottom"
+                    "placement": "bottom",
+                    "showLegend": true
                 },
                 "tooltip": {
                     "mode": "single",
@@ -176,7 +189,8 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(1.00, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(1.00, sum(rate(http_server_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
+                    "instant": false,
                     "legendFormat": "max",
                     "range": true,
                     "refId": "A"
@@ -187,9 +201,9 @@
                         "uid": "PBFA97CFB590B2093"
                     },
                     "editorMode": "code",
-                    "exemplar": true,
-                    "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
                     "hide": false,
+                    "instant": false,
                     "legendFormat": "tp99",
                     "range": true,
                     "refId": "B"
@@ -200,41 +214,169 @@
                         "uid": "PBFA97CFB590B2093"
                     },
                     "editorMode": "code",
-                    "exemplar": true,
-                    "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
                     "hide": false,
+                    "instant": false,
                     "legendFormat": "tp95",
                     "range": true,
                     "refId": "C"
                 }
             ],
-            "title": "latency for All",
+            "title": "server latency for user/{userId}",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "prometheus",
+                "uid": "PBFA97CFB590B2093"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisBorderShow": false,
+                        "axisCenteredZero": false,
+                        "axisColorMode": "text",
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 0,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "insertNulls": false,
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "auto",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    },
+                    "unit": "ms"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 23,
+                "x": 0,
+                "y": 35
+            },
+            "id": 7,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom",
+                    "showLegend": true
+                },
+                "tooltip": {
+                    "mode": "single",
+                    "sort": "none"
+                }
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "exemplar": true,
+                    "expr": "histogram_quantile(1.00, sum(rate(http_client_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
+                    "instant": false,
+                    "legendFormat": "max",
+                    "range": true,
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(0.99, sum(rate(http_client_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
+                    "hide": false,
+                    "instant": false,
+                    "legendFormat": "tp99",
+                    "range": true,
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "type": "prometheus",
+                        "uid": "PBFA97CFB590B2093"
+                    },
+                    "editorMode": "code",
+                    "expr": "histogram_quantile(0.95, sum(rate(http_client_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
+                    "hide": false,
+                    "instant": false,
+                    "legendFormat": "tp95",
+                    "range": true,
+                    "refId": "C"
+                }
+            ],
+            "title": "client latency for user/{userId}",
             "type": "timeseries"
         }
     ],
-    "schemaVersion": 36,
-    "style": "dark",
+    "refresh": "5s",
+    "schemaVersion": 39,
     "tags": [],
     "templating": {
         "list": [
             {
                 "current": {
-                    "selected": false,
-                    "text": "0003776c79e02b6c",
-                    "value": "0003776c79e02b6c"
+                    "selected": true,
+                    "text": "00000000000000000000000000000000",
+                    "value": "00000000000000000000000000000000"
                 },
                 "datasource": {
                     "type": "loki",
                     "uid": "loki"
                 },
-                "definition": "label_values(traceId)",
+                "definition": "",
                 "hide": 0,
                 "includeAll": false,
                 "label": "Trace ID",
                 "multi": false,
                 "name": "traceId",
                 "options": [],
-                "query": "label_values(traceId)",
+                "query": {
+                    "label": "traceId",
+                    "refId": "LokiVariableQueryEditor-VariableQuery",
+                    "stream": "",
+                    "type": 1
+                },
                 "refresh": 1,
                 "regex": "",
                 "skipUrlSync": false,
@@ -250,7 +392,7 @@
     "timepicker": {},
     "timezone": "",
     "title": "Logs, Traces, Metrics",
-    "uid": "szVLMe97z",
-    "version": 7,
+    "uid": "szVLMe97z2",
+    "version": 4,
     "weekStart": ""
 }

@@ -5,19 +5,13 @@ Edit the files in the src/main/asciidoc/ directory instead.
 ////
 
 
-The Spring Observability Team has been working on adding observability support for Spring Applications for quite some time, and we are pleased to inform you that this feature will be generally available with Spring Framework 6 and Spring Boot 3!
-
 What is observability? In our understanding, it is _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
 
-The upcoming Spring Boot `3.0.0-RC1` release will contain numerous autoconfigurations for improved metrics with https://micrometer.io/[Micrometer] and new distributed tracing support with https://micrometer.io/docs/tracing[Micrometer Tracing] (formerly https://spring.io/projects/spring-cloud-sleuth[Spring Cloud Sleuth]). The most notable changes are that it will contain built-in support for log correlation, https://www.w3.org/TR/trace-context/[W3C context propagation] will be the default propagation type, and we will support automatic propagation of metadata to be used by the tracing infrastructure (called "remote baggage") that helps to label the observations.
-
-We have been changing the Micrometer API a lot over the course of this year. The most important change is that we have introduced a new API: the Observation API.
+== How Does Micrometer Observation Work?
 
 > The idea of its founding was that we want the users to instrument their code once using a single API and have multiple benefits out of it (e.g. metrics, tracing, logging).
 
 This blog post details what you need to know to about that API and how you can use it to provide more insights into your application.
-
-= How Does Micrometer Observation Work?
 
 For any observation to happen, you need to register `ObservationHandler` objects through an `ObservationRegistry`. An `ObservationHandler` reacts only to supported implementations of an `Observation.Context` and can create, for example, timers, spans, and logs by reacting to the lifecycle events of an observation, such as:
 
@@ -72,13 +66,13 @@ example of such a key value (for example, `/user/user1234`, `/user/user2345`, an
 
 To separate observation lifecycle operations from an observation configuration (such as names and low and high cardinality tags), you can use the `ObservationConvention` that provides an easy way of overriding the default naming conventions.
 
-= Building Your First Observed Application
+== Building Your First Observed Application
 
-The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-SNAPSHOT (you can switch to RC1 once https://calendar.spring.io/[it's available]) and your favorite build tool.
+The easiest way to get started is to create a new project from https://start.spring.io.
 
 We will build a Spring WebMvc server application and a client to call the server using RestTemplate. We start with the server side.
 
-== WebMvc Server Setup
+=== WebMvc Server Setup
 
 Since we want to start an HTTP server, we have to pick the `org.springframework.boot:spring-boot-starter-web` dependency.
 
@@ -93,14 +87,27 @@ Now it is time to add observability related features!
 * *Tracing*
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
 *** The client application that we will create for this demo will use another tracer library to show an interop between tracers.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:brave-encoder-otel` dependency.
-// TODO: Add info about additional configuration (the ByteSender)
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:encoder-brave` dependency.
+*** To register OTLP span encoding define this bean
+./src/main/java/com/example/server/com/example/server/brave/BraveOtlpConfig.java
+[source,java]
+----
+@Configuration(proxyBeanMethods = false)
+public class BraveOtlpConfig {
+
+  @Bean
+  BytesEncoder<MutableSpan> otlpMutableSpanBytesEncoder() {
+    return new OtlpProtoV1Encoder(Tags.ERROR);
+  }
+
+}
+----
 * *Logs*
 ** Since we have Micrometer Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version)
 
 IMPORTANT: If you are new to tracing, we need to quickly define a couple of basic terms. You can wrap any operation in a `span`. It has a unique `span id` and contains timing information and some additional metadata (key-value pairs). Because you can produce child spans from spans, the whole tree of spans forms a `trace` that shares the same `trace id` (that is, a correlation identifier).
 
-Now we need to add some configuration. We set up `actuator` and `metrics` to publish percentiles histograms, and we redefine the logging pattern to include the trace and span identifiers. We set the sampling probability to `1.0` to send all traces to latency analysis tool.
+Now we need to add some configuration. We set up `actuator` and `metrics` to publish percentiles histograms. We set the sampling probability to `1.0` to send all traces to latency analysis tool. We set up the OTLP sender to point to Tempo's OTLP endpoint in HTTP Protobuf format.
 
 ./src/main/resources/application.properties
 [source,properties]
@@ -108,15 +115,17 @@ Now we need to add some configuration. We set up `actuator` and `metrics` to pub
 server.port=7654
 spring.application.name=server
 
+# For OTLP - OTLP Prometheus endpoint
+management.otlp.metrics.export.url=http://localhost:9090/api/v1/otlp/v1/metrics
+management.otlp.metrics.export.step=2s
 # All traces should be sent to latency analysis tool
 management.tracing.sampling.probability=1.0
-management.endpoints.web.exposure.include=prometheus
+# OTLP endpoint - OTLP Tempo endpoint
+management.zipkin.tracing.endpoint=http://localhost:4318/v1/traces
+management.zipkin.tracing.encoding=PROTO3
 
-# For Exemplars to work we need histogram buckets
+# For Exemplars to work we need histogram buckets - TODO: Micrometer OTLP doesn't yet support exemplars
 management.metrics.distribution.percentiles-histogram.http.server.requests=true
-
-# traceID and spanId are predefined MDC keys - we want the logs to include them
-logging.pattern.level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
 ----
 
 Since we are running the https://grafana.com/grafana/[Grafana] stack with https://grafana.com/oss/loki/[Loki] and https://grafana.com/oss/tempo/[Tempo] locally, we configure the `loki-logback-appender` to send logs to the local instance of Loki.
@@ -135,7 +144,7 @@ Since we are running the https://grafana.com/grafana/[Grafana] stack with https:
         </http>
         <format>
             <label>
-                <pattern>app=${appName},host=${HOSTNAME},traceID=%X{traceId:-NONE},level=%level</pattern>
+                <pattern>app=${appName},host=${HOSTNAME},level=%level,traceId=%X{traceId:-00000000000000000000000000000000}</pattern>
             </label>
             <message>
                 <pattern>${FILE_LOG_PATTERN}</pattern>
@@ -150,7 +159,7 @@ Since we are running the https://grafana.com/grafana/[Grafana] stack with https:
 </configuration>
 ----
 
-== WebMvc Server Code
+=== WebMvc Server Code
 
 Time to write some server-side code! We want to achieve full observability of our application, including metrics, tracing, and additional logging.
 
@@ -177,20 +186,7 @@ class MyController {
 }
 ----
 
-We want to have some detailed observation of the `MyUserService#userName` method. Thanks to having added AOP support, we can use the `@Observed` annotation. To do so, we can register a `ObservedAspect` bean.
-
-.MyConfiguration.java
-[source,java,indent=0]
-----
-@Configuration(proxyBeanMethods = false)
-class MyConfiguration {
-    // To have the @Observed support we need to register this aspect
-    @Bean
-    ObservedAspect observedAspect(ObservationRegistry observationRegistry) {
-        return new ObservedAspect(observationRegistry);
-    }
-}
-----
+We want to have some detailed observation of the `MyUserService#userName` method. Thanks to having added AOP support, we can use the `@Observed` annotation. With Spring Boot 3.3 the aspect gets automatically registered.
 
 .MyUserService.java
 [source,java,indent=0]
@@ -217,7 +213,7 @@ class MyUserService {
         catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return "foo";
+        return "foo " + userId;
     }
 }
 ----
@@ -262,17 +258,32 @@ class MyHandler implements ObservationHandler<Observation.Context> {
 
 That is it! Time for the client side.
 
-== RestTemplate Client Application Setup
+=== RestTemplate Client Application Setup
 
 As before, we add the `spring-boot-starter-web` and `spring-boot-starter-actuator` dependencies to have a web server running and Micrometer support added.
 
 Time to add observability related features!
 
 * *Metrics*
-** For Micrometer metrics with Prometheus, we need to add the `io.micrometer:micrometer-registry-prometheus` dependency.
+** For Micrometer metrics with OTLP, we need to add the `io.micrometer:micrometer-registry-otlp` dependency.
 * *Tracing*
-** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge. We pick https://opentelemetry.io[OpenTelemetry] by adding the `io.micrometer:micrometer-tracing-bridge-otel`.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OpenZipkin compliant span. To achieve that, we need to add the `io.opentelemetry:opentelemetry-exporter-zipkin` dependency.
+** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
+*** The client application that we will create for this demo will use another tracer library to show an interop between tracers.
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:encoder-brave` dependency.
+*** To register OTLP span encoding define this bean
+./src/main/java/com/example/client/com/example/server/brave/BraveOtlpConfig.java
+[source,java]
+----
+@Configuration(proxyBeanMethods = false)
+public class BraveOtlpConfig {
+
+  @Bean
+  BytesEncoder<MutableSpan> otlpMutableSpanBytesEncoder() {
+    return new OtlpProtoV1Encoder(Tags.ERROR);
+  }
+
+}
+----
 * *Logs*
 ** As previously, we add the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version) to ship logs to Loki.
 
@@ -284,12 +295,17 @@ Now we need to add some configuration. We add almost identical configuration as 
 server.port=6543
 spring.application.name=client
 
+# For OTLP - OTLP Prometheus endpoint
+management.otlp.metrics.export.url=http://localhost:9090/api/v1/otlp/v1/metrics
+management.otlp.metrics.export.step=2s
 # All traces should be sent to latency analysis tool
 management.tracing.sampling.probability=1.0
-management.endpoints.web.exposure.include=prometheus
+# OTLP endpoint - OTLP Tempo endpoint
+management.zipkin.tracing.endpoint=http://localhost:4318/v1/traces
+management.zipkin.tracing.encoding=PROTO3
 
-# traceID and spanId are predefined MDC keys - we want the logs to include them
-logging.pattern.level=%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]
+# For Exemplars to work we need histogram buckets - TODO: Micrometer OTLP doesn't yet support exemplars
+management.metrics.distribution.percentiles-histogram.http.client.requests=true
 ----
 
 The Loki Appender configuration looks exactly the same.
@@ -308,7 +324,7 @@ The Loki Appender configuration looks exactly the same.
         </http>
         <format>
             <label>
-                <pattern>app=${appName},host=${HOSTNAME},traceID=%X{traceId:-NONE},level=%level</pattern>
+                <pattern>app=${appName},host=${HOSTNAME},level=%level,traceId=%X{traceId:-00000000000000000000000000000000}</pattern>
             </label>
             <message>
                 <pattern>${FILE_LOG_PATTERN}</pattern>
@@ -323,7 +339,7 @@ The Loki Appender configuration looks exactly the same.
 </configuration>
 ----
 
-== RestTemplate Application Client Code
+=== RestTemplate Application Client Code
 
 Now it is time to write some client-side code! We send a request with `RestTemplate` to the server side, and we want to achieve the full observability of our application, including metrics and tracing.
 
@@ -354,29 +370,33 @@ class MyConfiguration {
         Random highCardinalityValues = new Random(); // Simulates potentially large number of values
         List<String> lowCardinalityValues = Arrays.asList("userType1", "userType2", "userType3"); // Simulates low number of values
         return args -> {
-            String highCardinalityUserId = String.valueOf(highCardinalityValues.nextLong(100_000));
-            // Example of using the Observability API manually
-            // <my.observation> is a "technical" name that does not depend on the context. It will be used to name e.g. Metrics
-             Observation.createNotStarted("my.observation", registry)
-                     // Low cardinality means that the number of potential values won't be big. Low cardinality entries will end up in e.g. Metrics
-                    .lowCardinalityKeyValue("userType", randomUserTypePicker(lowCardinalityValues))
-                     // High cardinality means that the number of potential values can be large. High cardinality entries will end up in e.g. Spans
-                    .highCardinalityKeyValue("userId", highCardinalityUserId)
-                     // <command-line-runner> is a "contextual" name that gives more details within the provided context. It will be used to name e.g. Spans
-                    .contextualName("command-line-runner")
-                     // The following lambda will be executed with an observation scope (e.g. all the MDC entries will be populated with tracing information). Also the observation will be started, stopped and if an error occurred it will be recorded on the observation
-                    .observe(() -> {
-                        log.info("Will send a request to the server"); // Since we're in an observation scope - this log line will contain tracing MDC entries ...
-                        String response = restTemplate.getForObject("http://localhost:7654/user/{userId}", String.class, highCardinalityUserId); // Boot's RestTemplate instrumentation creates a child span here
-                        log.info("Got response [{}]", response); // ... so will this line
-                    });
+            // let's simulate endless traffic
+            while(true) {
+                String highCardinalityUserId = String.valueOf(highCardinalityValues.nextLong(100_000));
+                // Example of using the Observability API manually
+                // <my.observation> is a "technical" name that does not depend on the context. It will be used to name e.g. Metrics
+                Observation.createNotStarted("my.observation", registry)
+                        // Low cardinality means that the number of potential values won't be big. Low cardinality entries will end up in e.g. Metrics
+                        .lowCardinalityKeyValue("userType", randomUserTypePicker(lowCardinalityValues))
+                        // High cardinality means that the number of potential values can be large. High cardinality entries will end up in e.g. Spans
+                        .highCardinalityKeyValue("userId", highCardinalityUserId)
+                        // <command-line-runner> is a "contextual" name that gives more details within the provided context. It will be used to name e.g. Spans
+                        .contextualName("command-line-runner")
+                        // The following lambda will be executed with an observation scope (e.g. all the MDC entries will be populated with tracing information). Also the observation will be started, stopped and if an error occurred it will be recorded on the observation
+                        .observe(() -> {
+                            log.info("Will send a request to the server"); // Since we're in an observation scope - this log line will contain tracing MDC entries ...
+                            String response = restTemplate.getForObject("http://localhost:7654/user/{userId}", String.class, highCardinalityUserId); // Boot's RestTemplate instrumentation creates a child span here
+                            log.info("Got response [{}]", response); // ... so will this line
+                        });
+                Thread.sleep(highCardinalityValues.nextLong(200));
+            }
 
         };
     }
 }
 ----
 
-== Running It All Together
+=== Running It All Together
 
 We have prepared a Docker setup of the whole observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
 
@@ -422,6 +442,8 @@ image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-bl
 +
 Notice a diamond shape in the metrics. These are https://grafana.com/docs/grafana/latest/basics/exemplars/[`Exemplars`]. Those are "`specific trace representative of measurement taken in a given time interval`". If you click on the shape, you can jump to the trace ID view to see the corresponding trace.
 +
+WARNING: By the date of writing this blog post (2024-09-10) Micrometer OTLP didn't support exemplars.
++
 image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/exemplar.png[]
 
 . Either click on the trace ID to `Query it with Tempo` or go to Tempo and pick the trace identifier yourself. You will see the following screen.
@@ -454,7 +476,7 @@ To build the applications, you need GraalVM on your path. If you use `SDKMan`, i
 
 [indent=0]
 ----
-sdk install java 22.3.r17.ea-nik
+sdk install java 24.0.2.r22-nik
 ----
 
 See also https://www.graalvm.org/java/quickstart/[GraalVM Quickstart].
@@ -529,23 +551,18 @@ You should get output similar to this:
 
 You can check Grafana for metrics, traces and logs!
 
-[[native-support-limitations]]
-=== Native Support Limitations
-
-On the client side, we need to provide the `reflect-config.js` configuration manually. For more information, see https://github.com/open-telemetry/opentelemetry-java/pull/4832[this PR].
-
-= Summary
+== Summary
 
 In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You can also visualize the latency, see the correlated logs, and check the metrics that come from your Spring Boot applications.
 
 You could also observe your applications by using native images with Spring Native.
 
-= Acknowledgments
+== Acknowledgments
 
 Work on the Micrometer Observability would not be possible without the extensive support of the whole Spring team, https://github.com/ttddyy/[Tadaya Tsuyukubo], https://github.com/izeye[Johnny Lim], and all the other contributors and reviewers.
 
-= Next Steps
+== Next Steps
 
-Based on community feedback, we will continue to improve our Observability story. We intend to go https://github.com/micrometer-metrics/micrometer/milestone/177[GA in November this year].
+Based on community feedback, we will continue to improve our Observability story.
 
-This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check out the documentation of our projects: https://micrometer.io/docs/contextPropagation[Micrometer Context Propagation], https://micrometer.io/docs[Micrometer], https://micrometer.io/docs/observation[Micrometer Observation], https://micrometer.io/docs/tracing[Micrometer Tracing] and https://micrometer.io/docs/observation#_documentation_building[Micrometer Docs Generator]! Click https://github.com/marcingrzejszczak/observability-boot-blog-post[here] to see the code used for this blog post.
+We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check out our https://micrometer.io[new website] and our https://docs.micrometer.io/micrometer/reference/[new docs]. Click https://github.com/marcingrzejszczak/observability-boot-blog-post[here] to see the code used for this blog post.

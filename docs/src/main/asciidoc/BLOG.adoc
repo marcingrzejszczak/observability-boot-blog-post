@@ -1,8 +1,6 @@
-The Spring Observability Team has been working on adding observability support for Spring Applications for quite some time, and we are pleased to inform you that this feature will be generally available with Spring Framework 6 and Spring Boot 3!
-
 What is observability? In our understanding, it is _"how well you can understand the internals of your system by examining its outputs"_. We believe that the interconnection between metrics, logging, and distributed tracing gives you the ability to reason about the state of your system in order to debug exceptions and latency in your applications. You can watch more about what we think observability is in https://tanzu.vmware.com/developer/tv/enlightning/10/[this episode of Enlightning with Jonatan Ivanov].
 
-= How Does Micrometer Observation Work?
+== How Does Micrometer Observation Work?
 
 > The idea of its founding was that we want the users to instrument their code once using a single API and have multiple benefits out of it (e.g. metrics, tracing, logging).
 
@@ -51,13 +49,13 @@ example of such a key value (for example, `/user/user1234`, `/user/user2345`, an
 
 To separate observation lifecycle operations from an observation configuration (such as names and low and high cardinality tags), you can use the `ObservationConvention` that provides an easy way of overriding the default naming conventions.
 
-= Building Your First Observed Application
+== Building Your First Observed Application
 
-The easiest way to get started is to create a new project from https://start.spring.io. Make sure to select Spring Boot 3.0.0-SNAPSHOT (you can switch to RC1 once https://calendar.spring.io/[it's available]) and your favorite build tool.
+The easiest way to get started is to create a new project from https://start.spring.io.
 
 We will build a Spring WebMvc server application and a client to call the server using RestTemplate. We start with the server side.
 
-== WebMvc Server Setup
+=== WebMvc Server Setup
 
 Since we want to start an HTTP server, we have to pick the `org.springframework.boot:spring-boot-starter-web` dependency.
 
@@ -72,8 +70,13 @@ Now it is time to add observability related features!
 * *Tracing*
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
 *** The client application that we will create for this demo will use another tracer library to show an interop between tracers.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:brave-encoder-otel` dependency.
-// TODO: Add info about additional configuration (the ByteSender)
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:encoder-brave` dependency.
+*** To register OTLP span encoding define this bean
+./src/main/java/com/example/server/com/example/server/brave/BraveOtlpConfig.java
+[source,java]
+----
+include::../../../../server/src/main/java/com/example/server/brave/BraveOtlpConfig.java[tags=encoder]
+----
 * *Logs*
 ** Since we have Micrometer Tracing on the classpath, the logs are automatically correlated (that is, they contain a unique trace identifier). Now we need to ship the logs. For this demo, we ship them to https://grafana.com/oss/loki/[Grafana Loki]. We can achieve that by adding the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version)
 
@@ -95,7 +98,7 @@ Since we are running the https://grafana.com/grafana/[Grafana] stack with https:
 include::../../../../server/src/main/resources/logback-spring.xml[]
 ----
 
-== WebMvc Server Code
+=== WebMvc Server Code
 
 Time to write some server-side code! We want to achieve full observability of our application, including metrics, tracing, and additional logging.
 
@@ -127,7 +130,7 @@ include::../../../../server/src/main/java/com/example/server/ServerApplication.j
 
 That is it! Time for the client side.
 
-== RestTemplate Client Application Setup
+=== RestTemplate Client Application Setup
 
 As before, we add the `spring-boot-starter-web` and `spring-boot-starter-actuator` dependencies to have a web server running and Micrometer support added.
 
@@ -138,8 +141,13 @@ Time to add observability related features!
 * *Tracing*
 ** For *Tracing Context Propagation* with Micrometer Tracing, we need to pick a *tracer* bridge (*tracer* is a library that is used to handle the lifecycle of a span). We pick https://zipkin.io[Zipkin Brave] by adding the `io.micrometer:micrometer-tracing-bridge-brave`.
 *** The client application that we will create for this demo will use another tracer library to show an interop between tracers.
-** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:brave-encoder-otel` dependency.
-// TODO: Add info about additional configuration (the ByteSender)
+** For *Latency Visualization*, we need to send the finished spans in some format to a server. In our case, we produce an OTLP-compliant span. To achieve that, we need to add the `io.zipkin.contrib.otel:encoder-brave` dependency.
+*** To register OTLP span encoding define this bean
+./src/main/java/com/example/client/com/example/server/brave/BraveOtlpConfig.java
+[source,java]
+----
+include::../../../../client/src/main/java/com/example/client/brave/BraveOtlpConfig.java[tags=encoder]
+----
 * *Logs*
 ** As previously, we add the `com.github.loki4j:loki-logback-appender` dependency (check https://search.maven.org/artifact/com.github.loki4j/loki-logback-appender[this link] for the latest release version) to ship logs to Loki.
 
@@ -159,7 +167,7 @@ The Loki Appender configuration looks exactly the same.
 include::../../../../client/src/main/resources/logback-spring.xml[]
 ----
 
-== RestTemplate Application Client Code
+=== RestTemplate Application Client Code
 
 Now it is time to write some client-side code! We send a request with `RestTemplate` to the server side, and we want to achieve the full observability of our application, including metrics and tracing.
 
@@ -185,24 +193,24 @@ include::../../../../client/src/main/java/com/example/client/ClientApplication.j
 }
 ----
 
-== Running It All Together
+=== Running It All Together
 
 We have prepared a Docker setup of the whole observability infrastructure under https://github.com/marcingrzejszczak/observability-boot-blog-post[this link]. Follow these steps to run the infrastructure and both applications.
 
 include::../../../../RUNNING.adoc[]
 
-= Summary
+== Summary
 
 In this blog post, we have managed to give you an introduction of the main concepts behind the Micrometer Observability API. We have also shown you how you can create observations by using the Observation API and annotations. You can also visualize the latency, see the correlated logs, and check the metrics that come from your Spring Boot applications.
 
 You could also observe your applications by using native images with Spring Native.
 
-= Acknowledgments
+== Acknowledgments
 
 Work on the Micrometer Observability would not be possible without the extensive support of the whole Spring team, https://github.com/ttddyy/[Tadaya Tsuyukubo], https://github.com/izeye[Johnny Lim], and all the other contributors and reviewers.
 
-= Next Steps
+== Next Steps
 
-Based on community feedback, we will continue to improve our Observability story. We intend to go https://github.com/micrometer-metrics/micrometer/milestone/177[GA in November this year].
+Based on community feedback, we will continue to improve our Observability story.
 
-This is an exciting time for us. We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check out the documentation of our projects: https://micrometer.io/docs/contextPropagation[Micrometer Context Propagation], https://micrometer.io/docs[Micrometer], https://micrometer.io/docs/observation[Micrometer Observation], https://micrometer.io/docs/tracing[Micrometer Tracing] and https://micrometer.io/docs/observation#_documentation_building[Micrometer Docs Generator]! Click https://github.com/marcingrzejszczak/observability-boot-blog-post[here] to see the code used for this blog post.
+We would again like to thank everyone who has already contributed and reported feedback, and we look forward to further feedback! Check out Spring Boot's latest snapshots! Check out our https://micrometer.io[new website] and our https://docs.micrometer.io/micrometer/reference/[new docs]. Click https://github.com/marcingrzejszczak/observability-boot-blog-post[here] to see the code used for this blog post.
