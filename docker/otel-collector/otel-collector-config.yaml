@@ -1,0 +1,27 @@
+extensions:
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+  traces:
+    endpoint: http://tempo:4318
+  debug:
+    verbosity: detailed
+  prometheusremotewrite:
+    endpoint: http://prometheus:9090/api/v1/push
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug, logging, traces, prometheusremotewrite]

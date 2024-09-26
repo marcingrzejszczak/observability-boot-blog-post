@@ -40,6 +40,8 @@ image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-bl
 +
 Notice a diamond shape in the metrics. These are https://grafana.com/docs/grafana/latest/basics/exemplars/[`Exemplars`]. Those are "`specific trace representative of measurement taken in a given time interval`". If you click on the shape, you can jump to the trace ID view to see the corresponding trace.
 +
+WARNING: By the date of writing this blog post (2024-09-10) Micrometer OTLP didn't support exemplars.
++
 image::https://raw.githubusercontent.com/marcingrzejszczak/observability-boot-blog-post/main/docs/src/main/asciidoc/img/exemplar.png[]
 
 . Either click on the trace ID to `Query it with Tempo` or go to Tempo and pick the trace identifier yourself. You will see the following screen.
@@ -72,7 +74,7 @@ To build the applications, you need GraalVM on your path. If you use `SDKMan`, i
 
 [indent=0]
 ----
-sdk install java 22.3.r17.ea-nik
+sdk install java 24.0.2.r22-nik
 ----
 
 See also https://www.graalvm.org/java/quickstart/[GraalVM Quickstart].
@@ -146,8 +148,3 @@ You should get output similar to this:
 ----
 
 You can check Grafana for metrics, traces and logs!
-
-[[native-support-limitations]]
-=== Native Support Limitations
-
-On the client side, we need to provide the `reflect-config.js` configuration manually. For more information, see https://github.com/open-telemetry/opentelemetry-java/pull/4832[this PR].

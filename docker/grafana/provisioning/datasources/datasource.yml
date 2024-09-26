@@ -15,7 +15,7 @@ datasources:
       type: tempo
       access: proxy
       orgId: 1
-      url: http://tempo:3200
+      url: http://host.docker.internal:3200
       basicAuth: false
       isDefault: true
       version: 1
@@ -24,22 +24,42 @@ datasources:
       uid: tempo
       jsonData:
           httpMethod: GET
+          tracesToLogsV2:
+            datasourceUid: 'loki'
+            spanStartTimeShift: '-1h'
+            spanEndTimeShift: '1h'
+            filterByTraceID: true
+            filterBySpanID: true
+          tracesToMetrics:
+            datasourceUid: Prometheus
           tracesToLogs:
-              datasourceUid: 'loki'
+              datasourceUid: loki
+              mapTagNamesEnabled: true
+              filterByTraceID: true
+              filterBySpanID: true
+              spanStartTimeShift: '-10m'
+              spanEndTimeShift: '10m'
+          lokiSearch:
+            datasourceUid: loki
+          serviceMap:
+            datasourceUid: Prometheus
+          nodeGraph:
+            enabled: true
     - name: Loki
       type: loki
       uid: loki
       access: proxy
       orgId: 1
-      url: http://loki:3100
+      url: http://host.docker.internal:3100
       basicAuth: false
       isDefault: false
       version: 1
-      editable: false
+      editable: true
       apiVersion: 1
       jsonData:
-          derivedFields:
-              -   datasourceUid: tempo
-                  matcherRegex: \[.+,(.+?),
-                  name: TraceID
-                  url: $${__value.raw}
+        maxLines: 50
+        derivedFields:
+          - datasourceUid: tempo
+            matcherRegex: '.+ --- \[.+\] \[.+\] \[(\w*)-\w*\] .+'
+            name: TraceID
+            url: $${__value.raw}
