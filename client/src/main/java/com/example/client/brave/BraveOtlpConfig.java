@@ -1,6 +1,5 @@
 package com.example.client.brave;
 
-import brave.Tags;
 import brave.handler.MutableSpan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +12,7 @@ public class BraveOtlpConfig {
 
   @Bean
   BytesEncoder<MutableSpan> otlpMutableSpanBytesEncoder() {
-    return new OtlpProtoV1Encoder(Tags.ERROR);
+    return OtlpProtoV1Encoder.create();
   }
 
 }

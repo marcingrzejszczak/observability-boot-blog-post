@@ -24,7 +24,7 @@
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
-    "id": 2,
+    "id": 3,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -58,7 +58,7 @@
                         "uid": "loki"
                     },
                     "editorMode": "builder",
-                    "expr": "{traceId=\"$traceId\"}",
+                    "expr": "{app=~\".+\"} |= `$traceId`",
                     "queryType": "range",
                     "refId": "A"
                 }
@@ -87,7 +87,7 @@
                     },
                     "filters": [
                         {
-                            "id": "ede501e2",
+                            "id": "015bc435",
                             "operator": "=",
                             "scope": "span"
                         }
@@ -189,122 +189,11 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(1.00, sum(rate(http_server_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
-                    "instant": false,
+                    "expr": "histogram_quantile(1.00, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
                     "legendFormat": "max",
                     "range": true,
                     "refId": "A"
                 },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "PBFA97CFB590B2093"
-                    },
-                    "editorMode": "code",
-                    "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
-                    "hide": false,
-                    "instant": false,
-                    "legendFormat": "tp99",
-                    "range": true,
-                    "refId": "B"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "PBFA97CFB590B2093"
-                    },
-                    "editorMode": "code",
-                    "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
-                    "hide": false,
-                    "instant": false,
-                    "legendFormat": "tp95",
-                    "range": true,
-                    "refId": "C"
-                }
-            ],
-            "title": "server latency for user/{userId}",
-            "type": "timeseries"
-        },
-        {
-            "datasource": {
-                "type": "prometheus",
-                "uid": "PBFA97CFB590B2093"
-            },
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "palette-classic"
-                    },
-                    "custom": {
-                        "axisBorderShow": false,
-                        "axisCenteredZero": false,
-                        "axisColorMode": "text",
-                        "axisLabel": "",
-                        "axisPlacement": "auto",
-                        "barAlignment": 0,
-                        "drawStyle": "line",
-                        "fillOpacity": 0,
-                        "gradientMode": "none",
-                        "hideFrom": {
-                            "legend": false,
-                            "tooltip": false,
-                            "viz": false
-                        },
-                        "insertNulls": false,
-                        "lineInterpolation": "linear",
-                        "lineWidth": 1,
-                        "pointSize": 5,
-                        "scaleDistribution": {
-                            "type": "linear"
-                        },
-                        "showPoints": "auto",
-                        "spanNulls": false,
-                        "stacking": {
-                            "group": "A",
-                            "mode": "none"
-                        },
-                        "thresholdsStyle": {
-                            "mode": "off"
-                        }
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "red",
-                                "value": 80
-                            }
-                        ]
-                    },
-                    "unit": "ms"
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 10,
-                "w": 23,
-                "x": 0,
-                "y": 35
-            },
-            "id": 7,
-            "options": {
-                "legend": {
-                    "calcs": [],
-                    "displayMode": "list",
-                    "placement": "bottom",
-                    "showLegend": true
-                },
-                "tooltip": {
-                    "mode": "single",
-                    "sort": "none"
-                }
-            },
-            "targets": [
                 {
                     "datasource": {
                         "type": "prometheus",
@@ -312,21 +201,8 @@
                     },
                     "editorMode": "code",
                     "exemplar": true,
-                    "expr": "histogram_quantile(1.00, sum(rate(http_client_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
-                    "instant": false,
-                    "legendFormat": "max",
-                    "range": true,
-                    "refId": "A"
-                },
-                {
-                    "datasource": {
-                        "type": "prometheus",
-                        "uid": "PBFA97CFB590B2093"
-                    },
-                    "editorMode": "code",
-                    "expr": "histogram_quantile(0.99, sum(rate(http_client_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
+                    "expr": "histogram_quantile(0.99, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
                     "hide": false,
-                    "instant": false,
                     "legendFormat": "tp99",
                     "range": true,
                     "refId": "B"
@@ -337,51 +213,37 @@
                         "uid": "PBFA97CFB590B2093"
                     },
                     "editorMode": "code",
-                    "expr": "histogram_quantile(0.95, sum(rate(http_client_requests_milliseconds_bucket{uri=\"/user/{userId}\"}[$__rate_interval])) by (le))",
+                    "exemplar": true,
+                    "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_milliseconds_bucket{uri=~\".*\"}[$__rate_interval])) by (le))",
                     "hide": false,
-                    "instant": false,
                     "legendFormat": "tp95",
                     "range": true,
                     "refId": "C"
                 }
             ],
-            "title": "client latency for user/{userId}",
+            "title": "latency for All",
             "type": "timeseries"
         }
     ],
-    "refresh": "5s",
     "schemaVersion": 39,
     "tags": [],
     "templating": {
         "list": [
             {
                 "current": {
-                    "selected": true,
-                    "text": "00000000000000000000000000000000",
-                    "value": "00000000000000000000000000000000"
+                    "selected": false
                 },
-                "datasource": {
-                    "type": "loki",
-                    "uid": "loki"
-                },
-                "definition": "",
+                "description": "Trace Id",
                 "hide": 0,
                 "includeAll": false,
                 "label": "Trace ID",
                 "multi": false,
                 "name": "traceId",
                 "options": [],
-                "query": {
-                    "label": "traceId",
-                    "refId": "LokiVariableQueryEditor-VariableQuery",
-                    "stream": "",
-                    "type": 1
-                },
-                "refresh": 1,
-                "regex": "",
+                "query": "",
+                "queryValue": "",
                 "skipUrlSync": false,
-                "sort": 0,
-                "type": "query"
+                "type": "custom"
             }
         ]
     },
@@ -392,7 +254,7 @@
     "timepicker": {},
     "timezone": "",
     "title": "Logs, Traces, Metrics",
-    "uid": "szVLMe97z2",
-    "version": 4,
+    "uid": "edz2d9w1so8aoa",
+    "version": 1,
     "weekStart": ""
 }

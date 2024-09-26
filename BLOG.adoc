@@ -117,7 +117,8 @@ spring.application.name=server
 
 # For OTLP - OTLP Prometheus endpoint
 management.otlp.metrics.export.url=http://localhost:9090/api/v1/otlp/v1/metrics
-management.otlp.metrics.export.step=2s # only for demo purposes
+# only for demo purposes
+management.otlp.metrics.export.step=2s
 # All traces should be sent to latency analysis tool
 management.tracing.sampling.probability=1.0
 # OTLP endpoint - OTLP Tempo endpoint
@@ -297,7 +298,8 @@ spring.application.name=client
 
 # For OTLP - OTLP Prometheus endpoint
 management.otlp.metrics.export.url=http://localhost:9090/api/v1/otlp/v1/metrics
-management.otlp.metrics.export.step=2s # only for demo purposes
+# only for demo purposes
+management.otlp.metrics.export.step=2s
 # All traces should be sent to latency analysis tool
 management.tracing.sampling.probability=1.0
 # OTLP endpoint - OTLP Tempo endpoint

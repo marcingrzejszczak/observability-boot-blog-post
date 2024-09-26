@@ -65,7 +65,7 @@ public class ClientApplication {
 							String response = restTemplate.getForObject("http://localhost:7654/user/{userId}", String.class, highCardinalityUserId); // Boot's RestTemplate instrumentation creates a child span here
 							log.info("Got response [{}]", response); // ... so will this line
 						});
-				Thread.sleep(highCardinalityValues.nextLong(200));
+				Thread.sleep(highCardinalityValues.nextLong(500));
 			}
 
 		};

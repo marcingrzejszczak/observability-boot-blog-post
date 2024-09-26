@@ -1,6 +1,5 @@
 package com.example.server.brave;
 
-import brave.Tags;
 import brave.handler.MutableSpan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
