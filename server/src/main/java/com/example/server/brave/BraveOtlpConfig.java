@@ -13,7 +13,7 @@ public class BraveOtlpConfig {
 
   @Bean
   BytesEncoder<MutableSpan> otlpMutableSpanBytesEncoder() {
-    return new OtlpProtoV1Encoder(Tags.ERROR);
+    return OtlpProtoV1Encoder.create();
   }
 
 }
