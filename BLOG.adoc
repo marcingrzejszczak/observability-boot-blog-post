@@ -144,7 +144,7 @@ Since we are running the https://grafana.com/grafana/[Grafana] stack with https:
         </http>
         <format>
             <label>
-                <pattern>app=${appName},host=${HOSTNAME},level=%level,traceId=%X{traceId:-00000000000000000000000000000000}</pattern>
+                <pattern>app=${appName},host=${HOSTNAME},level=%level</pattern>
             </label>
             <message>
                 <pattern>${FILE_LOG_PATTERN}</pattern>
@@ -297,7 +297,7 @@ spring.application.name=client
 
 # For OTLP - OTLP Prometheus endpoint
 management.otlp.metrics.export.url=http://localhost:9090/api/v1/otlp/v1/metrics
-management.otlp.metrics.export.step=2s
+management.otlp.metrics.export.step=2s # only for demo purposes
 # All traces should be sent to latency analysis tool
 management.tracing.sampling.probability=1.0
 # OTLP endpoint - OTLP Tempo endpoint
@@ -324,7 +324,7 @@ The Loki Appender configuration looks exactly the same.
         </http>
         <format>
             <label>
-                <pattern>app=${appName},host=${HOSTNAME},level=%level,traceId=%X{traceId:-00000000000000000000000000000000}</pattern>
+                <pattern>app=${appName},host=${HOSTNAME},level=%level</pattern>
             </label>
             <message>
                 <pattern>${FILE_LOG_PATTERN}</pattern>
