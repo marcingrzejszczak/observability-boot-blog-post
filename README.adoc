@@ -1,6 +1,6 @@
-=  Spring Observability Support in Spring Boot 3.0.0-RC1
+=  Spring Boot <3 OpenTelemetry
 
-Code supporting the blog post related to Spring Observability support in Spring Boot 3.0.0-RC1
+Code supporting the blog post related to how Spring Boot works with OpenTelemetry.
 
 == Building the docs
 
