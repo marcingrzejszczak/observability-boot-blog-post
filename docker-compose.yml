@@ -1,50 +1,60 @@
-
 services:
-    tempo:
-        image: grafana/tempo
-        extra_hosts: ['host.docker.internal:host-gateway']
-        command: [ "-config.file=/etc/tempo.yaml" ]
-        volumes:
-            - ./docker/tempo/tempo-local.yaml:/etc/tempo.yaml:ro
-            - ./tempo-data:/tmp/tempo
-        ports:
-            - "14268"  # jaeger ingest
-            - "9411:9411" # zipkin
-
-    loki:
-        image: grafana/loki
-        extra_hosts: ['host.docker.internal:host-gateway']
-        command: [ "-config.file=/etc/loki/local-config.yaml" ]
-        ports:
-            - "3100:3100"                                   # loki needs to be exposed so it receives logs
-        environment:
-            - JAEGER_AGENT_HOST=tempo
-            - JAEGER_ENDPOINT=http://tempo:14268/api/traces # send traces to Tempo
-            - JAEGER_SAMPLER_TYPE=const
-            - JAEGER_SAMPLER_PARAM=1
-
+#    collector:
+#        image: otel/opentelemetry-collector:0.103.1
+#        extra_hosts: ['host.docker.internal:host-gateway']
+#        volumes:
+#            - ./docker/otel-collector/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml
+#        ports:
+#            - 1888:1888 # pprof extension
+#            - 8888:8888 # Prometheus metrics exposed by the collector
+#            - 8889:8889 # Prometheus exporter metrics
+#            - 13133:13133 # health_check extension
+#            - 4318:4318 # OTLP http receiver (for metrics and spans)
+#            - 55679:55679 # zpages extension
     prometheus:
-        image: prom/prometheus
+        image: prom/prometheus:v2.54.1 # https://hub.docker.com/r/prom/prometheus
         extra_hosts: ['host.docker.internal:host-gateway']
         command:
             - --enable-feature=exemplar-storage
+            - --enable-feature=otlp-write-receiver
+            - --web.enable-remote-write-receiver
             - --config.file=/etc/prometheus/prometheus.yml
         volumes:
+            - prometheus:/prometheus
             - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
         ports:
             - "9090:9090"
-
     grafana:
-        image: grafana/grafana
+        image: grafana/grafana:10.4.10 # https://hub.docker.com/r/grafana/grafana/tags
         extra_hosts: ['host.docker.internal:host-gateway']
-        volumes:
-            - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-            - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
         environment:
             - GF_AUTH_ANONYMOUS_ENABLED=true
             - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
             - GF_AUTH_DISABLE_LOGIN_FORM=true
+        volumes:
+            - ./docker/grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+            - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+            - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
         ports:
             - "3000:3000"
-# Prometheus: http://localhost:9090/
-# Grafana: http://localhost:3000/
+    tempo:
+        image: grafana/tempo:2.4.2 # https://hub.docker.com/r/grafana/tempo/tags and https://github.com/grafana/tempo/releases
+        extra_hosts: ['host.docker.internal:host-gateway']
+        command: ['-config.file=/etc/tempo.yml']
+        volumes:
+            - tempo:/tmp/tempo
+            - ./docker/grafana/tempo.yml:/etc/tempo.yml:ro
+        ports:
+            - "3200:3200"    # tempo
+            - "4318:4318"  # otlp http
+    loki:
+        image: grafana/loki:3.1.2 # https://hub.docker.com/r/grafana/loki/tags and https://github.com/grafana/loki/releases
+        extra_hosts: ['host.docker.internal:host-gateway']
+        command: ['-config.file=/etc/loki/local-config.yaml']
+        ports:
+            - "3100:3100"
+volumes:
+    prometheus:
+        driver: local
+    tempo:
+        driver: local
